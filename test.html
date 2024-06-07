@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload with Encryption</title>
+</head>
+<body>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">Upload</button>
+
+    <script>
+        async function encryptFile(file, key) {
+            const data = await file.arrayBuffer();
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const algorithm = { name: 'AES-GCM', iv: iv };
+
+            const cryptoKey = await crypto.subtle.importKey('raw', key, algorithm, false, ['encrypt']);
+            const encrypted = await crypto.subtle.encrypt(algorithm, cryptoKey, data);
+
+            return { encrypted: new Uint8Array(encrypted), iv: iv };
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) return alert('Please select a file.');
+
+            const key = crypto.getRandomValues(new Uint8Array(32)); // Example key, should be securely managed
+            const { encrypted, iv } = await encryptFile(file, key);
+
+            const formData = new FormData();
+            formData.append('file', new Blob([encrypted]), file.name);
+            formData.append('iv', new Blob([iv]));
+            formData.append('key', new Blob([key])); // Key should be securely managed, not sent like this
+
+            await fetch('http://localhost:8000/files/', {
+                method: 'POST',
+                body: formData
+            });
+            alert('File uploaded successfully');
+        }
+    </script>
+</body>
+</html>
