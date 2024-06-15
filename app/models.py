@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, LargeBinary
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -12,14 +12,10 @@ AsyncSessionLocal = sessionmaker(
 )
 
 
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    hpass = Column(String)
-
-
 class File(Base):
     __tablename__ = "files"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
+    path = Column(String)
+    iv = Column(LargeBinary)
+    user_id = Column(Integer)
