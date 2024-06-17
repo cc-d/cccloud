@@ -32,7 +32,7 @@ def enc_file(uf: UploadFile, file_path: str, key: str) -> str:
             enc_file.write(nonce)
             while chunk := uf.file.read(cfg.CHUNK_SIZE):
                 ciphertext = cipher.encrypt(nonce, chunk, None)
-                chunk_size_bytes = len(ciphertext).to_bytes(4)
+                chunk_size_bytes = len(ciphertext).to_bytes(4, byteorder='big')
                 enc_file.write(chunk_size_bytes)
                 enc_file.write(ciphertext)
         logger.info(f"File encrypted successfully: {enc_path}")
@@ -54,7 +54,7 @@ def stream_file(file_path: str, key: str):
                 chunk_size_bytes = file.read(4)
                 if not chunk_size_bytes:
                     break
-                chunk_size = int.from_bytes(chunk_size_bytes)
+                chunk_size = int.from_bytes(chunk_size_bytes, byteorder='big')
                 chunk = file.read(chunk_size)
                 yield cipher.decrypt(nonce, chunk, None)
     except Exception as e:
