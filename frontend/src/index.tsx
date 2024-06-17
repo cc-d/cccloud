@@ -21,7 +21,7 @@ const root = ReactDOM.createRoot(
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
-      <Route path="upload" element={<FileUpload />} />
+      <Route path="upload/:uid" element={<FileUpload />} />
     </Route>
   )
 );

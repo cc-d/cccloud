@@ -10,21 +10,23 @@ import {
   Alert,
 } from '@mui/material';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
 
 const FileUpload = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [key, setKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadedURLs, setUploadedURLs] = useState<string[]>([]);
+  const { uid } = useParams<{ uid: string }>();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFile(event.target.files ? event.target.files[0] : null);
   };
 
   const handleUpload = async () => {
-    if (!file || !key) {
-      setError('Please provide both a file and a key.');
+    if (!file || !uid) {
+      setError('Please provide both a file and a uid.');
       return;
     }
 
@@ -37,7 +39,7 @@ const FileUpload = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:8000/upload/?key=${encodeURIComponent(key)}`,
+        `http://localhost:8000/up/${uid}`,
         formData,
         {
           headers: {
@@ -47,6 +49,7 @@ const FileUpload = () => {
       );
       if (response.status === 201) {
         setSuccess(true);
+        setUploadedURLs([...uploadedURLs, response.data.url]);
       }
     } catch (err) {
       setError('Failed to upload file. Please try again.');
@@ -68,10 +71,10 @@ const FileUpload = () => {
       >
         <input type="file" onChange={handleFileChange} />
         <TextField
-          label="Encryption Key"
+          label="Encryption User ID"
           variant="outlined"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
+          value={uid || ''}
+          disabled
         />
         <Button
           variant="contained"
@@ -81,6 +84,18 @@ const FileUpload = () => {
         >
           {loading ? <CircularProgress size={24} /> : 'Upload'}
         </Button>
+      </Box>
+      <Box>
+        <Typography>Uploaded URLs: </Typography>
+        <ul>
+          {uploadedURLs.map((url, index) => (
+            <li key={index}>
+              <a href={url} target="_blank" rel="noreferrer">
+                {url}
+              </a>
+            </li>
+          ))}
+        </ul>
       </Box>
       <Snackbar
         open={success}

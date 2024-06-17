@@ -26,30 +26,32 @@ def index():
     return {'status': 'ok'}
 
 
-@app.post("/upload/", status_code=status.HTTP_201_CREATED)
-@app.post("/up", status_code=status.HTTP_201_CREATED)
-async def upload_file(file: UploadFile = File(...), key: str = Query(...)):
-    ef = ut.enc_file(
-        file, op.join(cfg.UPLOAD_DIR, ut.sha_dir(key), file.filename), key
-    )
-
-    return {"info": f"file '{file.filename}' saved and encrypted at '{ef}'"}
-
-
-@app.get("/download/", response_class=StreamingResponse)
-@app.get("/dl", response_class=StreamingResponse)
+@app.post("/up/{uid}", status_code=status.HTTP_201_CREATED)
 @logf(use_print=True)
-async def download_file(filename: str, key: str = Query(...)):
-    file_path = op.join(
-        cfg.UPLOAD_DIR, ut.sha_dir(key), filename.rstrip(cfg.EXT) + cfg.EXT
+async def upload_file(uid: str, file: UploadFile = File(...)):
+    print(f'uid: {uid}, file: {file},')
+    ef = ut.enc_file(
+        file, op.join(cfg.UPLOAD_DIR, uid, _safename(file.filename)), uid
     )
-    print(f"download_file: file_path: {file_path}")
+
+    return {
+        'status': 'ok',
+        'url': f'{cfg.BASE_URL}/view/{uid}/{file.filename}',
+    }
+
+
+@app.get("/dl/{uid}/{filename}", response_class=StreamingResponse)
+@logf(use_print=True)
+async def download_file(uid: str, filename: str):
+    file_path = op.join(
+        cfg.UPLOAD_DIR, uid, filename.rstrip(cfg.EXT) + cfg.EXT
+    )
 
     if not op.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
     response = StreamingResponse(
-        ut.stream_file(file_path, key), media_type="application/octet-stream"
+        ut.stream_file(file_path, uid), media_type="application/octet-stream"
     )
     response.headers["Content-Disposition"] = (
         f"attachment; filename={filename}"
@@ -59,19 +61,31 @@ async def download_file(filename: str, key: str = Query(...)):
 
 
 def _guess_type(filename: str) -> str:
-    mime_type, _ = guess_type(filename)
+    mime_type, _ = guess_type(filename, strict=False)
     if not mime_type:
         mime_type = "application/octet-stream"
     return mime_type
 
 
-@app.get("/view/{filename}", response_class=StreamingResponse)
-async def view_file(filename: str, key: str = Query(...)):
-    file_path = op.join(
-        cfg.UPLOAD_DIR, ut.sha_dir(key), filename.rstrip(cfg.EXT) + cfg.EXT
-    )
+def _safename(name: str) -> str:
+    if name.endswith(cfg.EXT):
+        name = name[: -len(cfg.EXT)]
+    name = op.basename(name)
+    name = ''.join([c for c in name if c.isalnum() or c in '._- '])
+    return name
+
+
+@app.get("/view/{uid}/{filename}", response_class=StreamingResponse)
+@logf(use_print=True)
+async def view_file(uid: str, filename: str):
+    key = uid
+    if filename.endswith(cfg.EXT):
+        filename = filename[: -len(cfg.EXT)]
+    file_path = op.join(cfg.UPLOAD_DIR, uid, _safename(filename) + cfg.EXT)
+    print(f'file_path: {file_path}')
     if not op.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
+
     return StreamingResponse(
         ut.stream_file(file_path, key), media_type=_guess_type(filename)
     )
