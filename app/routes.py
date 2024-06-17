@@ -7,7 +7,7 @@ from pyshared import U, Opt, Gen
 from fastapi import FastAPI, HTTPException, UploadFile, File, Query, status
 from fastapi.responses import StreamingResponse, Response
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from mimetypes import guess_type
+
 from .appinit import app
 
 from logfunc import logf
@@ -29,10 +29,8 @@ def index():
 @app.post("/up/{uid}", status_code=status.HTTP_201_CREATED)
 @logf(use_print=True)
 async def upload_file(uid: str, file: UploadFile = File(...)):
-    print(f'uid: {uid}, file: {file},')
-    ef = ut.enc_file(
-        file, op.join(cfg.UPLOAD_DIR, uid, _safename(file.filename)), uid
-    )
+    fname = ut.safe_name(file.filename)
+    ef = ut.enc_file(file, op.join(cfg.UPLOAD_DIR, uid, fname), uid)
 
     return {
         'status': 'ok',
@@ -43,8 +41,12 @@ async def upload_file(uid: str, file: UploadFile = File(...)):
 @app.get("/dl/{uid}/{filename}", response_class=StreamingResponse)
 @logf(use_print=True)
 async def download_file(uid: str, filename: str):
+    filename = ut.safe_name(filename)
+    if filename.endswith(cfg.EXT):
+        filename = filename[: -len(cfg.EXT)]
+
     file_path = op.join(
-        cfg.UPLOAD_DIR, uid, filename.rstrip(cfg.EXT) + cfg.EXT
+        cfg.UPLOAD_DIR, uid, op.join(cfg.UPLOAD_DIR, uid, filename + cfg.EXT)
     )
 
     if not op.exists(file_path):
@@ -60,32 +62,18 @@ async def download_file(uid: str, filename: str):
     return response
 
 
-def _guess_type(filename: str) -> str:
-    mime_type, _ = guess_type(filename, strict=False)
-    if not mime_type:
-        mime_type = "application/octet-stream"
-    return mime_type
-
-
-def _safename(name: str) -> str:
-    if name.endswith(cfg.EXT):
-        name = name[: -len(cfg.EXT)]
-    name = op.basename(name)
-    name = ''.join([c for c in name if c.isalnum() or c in '._- '])
-    return name
-
-
 @app.get("/view/{uid}/{filename}", response_class=StreamingResponse)
 @logf(use_print=True)
 async def view_file(uid: str, filename: str):
-    key = uid
+
+    filename = ut.safe_name(filename)
     if filename.endswith(cfg.EXT):
         filename = filename[: -len(cfg.EXT)]
-    file_path = op.join(cfg.UPLOAD_DIR, uid, _safename(filename) + cfg.EXT)
-    print(f'file_path: {file_path}')
+    file_path = op.join(cfg.UPLOAD_DIR, uid, filename + cfg.EXT)
+
     if not op.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
     return StreamingResponse(
-        ut.stream_file(file_path, key), media_type=_guess_type(filename)
+        ut.stream_file(file_path, uid), media_type=ut.guess_type(filename)
     )

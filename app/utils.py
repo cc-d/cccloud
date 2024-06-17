@@ -1,9 +1,10 @@
 import hashlib
 import os
+import os.path as op
 import logging
 from fastapi import UploadFile, HTTPException
 from os import path as op
-
+from mimetypes import guess_type
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from . import config as cfg
@@ -19,8 +20,8 @@ def enc_file(uf: UploadFile, file_path: str, key: str) -> str:
     encryption_key = enc_key(key)
     nonce = os.urandom(12)
     cipher = AESGCM(encryption_key)
-    enc_path = file_path + cfg.EXT
-    enc_dir = os.path.dirname(enc_path)
+    enc_path = op.join(file_path, cfg.EXT)
+    enc_dir = op.dirname(enc_path)
 
     # Ensure the directory exists
     if not op.exists(enc_dir):
@@ -67,3 +68,15 @@ def sha_dir(key: str) -> str:
     if not op.exists(dir_path):
         os.makedirs(dir_path)
     return name
+
+
+def guess_type(filename: str) -> str:
+    mime_type, _ = guess_type(filename, strict=False)
+    if not mime_type:
+        mime_type = "application/octet-stream"
+    return mime_type
+
+
+def safe_name(name: str) -> str:
+    name = op.basename(name)
+    return ''.join(c for c in name if c in cfg.SAFE_CHARS)

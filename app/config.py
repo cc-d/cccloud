@@ -15,3 +15,11 @@ CHUNK_SIZE = 1024 * 1024
 EXT = '.enc'
 
 BASE_URL = evar('CCC_HOST', 'http://localhost:8000')
+
+
+SAFE_CHARS = (
+    '0123456789'
+    + 'abcdefghijklmnopqrstuvwxyz'
+    + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    + '!#$%&()+,-.:;<=>?@[]^_`{|}~ '
+)
