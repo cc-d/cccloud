@@ -29,21 +29,16 @@ def index():
 @app.post("/up/{uid}", status_code=status.HTTP_201_CREATED)
 @logf(use_print=True)
 async def upload_file(uid: str, file: UploadFile = File(...)):
-    fname = ut.safe_name(file.filename)
+    fname = ut.strip_ext(ut.safe_name(file.filename))
     ef = ut.enc_file(file, op.join(cfg.UPLOAD_DIR, uid, fname), uid)
 
-    return {
-        'status': 'ok',
-        'url': f'{cfg.BASE_URL}/view/{uid}/{file.filename}',
-    }
+    return {'status': 'ok', 'url': f'{cfg.BASE_URL}/view/{uid}/{fname}'}
 
 
 @app.get("/dl/{uid}/{filename}", response_class=StreamingResponse)
 @logf(use_print=True)
 async def download_file(uid: str, filename: str):
-    filename = ut.safe_name(filename)
-    if filename.endswith(cfg.EXT):
-        filename = filename[: -len(cfg.EXT)]
+    filename = ut.strip_ext(ut.safe_name(filename))
 
     file_path = op.join(
         cfg.UPLOAD_DIR, uid, op.join(cfg.UPLOAD_DIR, uid, filename + cfg.EXT)
@@ -61,18 +56,17 @@ async def download_file(uid: str, filename: str):
     response.headers["Transfer-Encoding"] = "chunked"
     return response
 
+
 @app.get("/files/{uid}", response_model=list[str])
 @logf(use_print=True)
 async def list_files(uid: str):
     return os.listdir(op.join(cfg.UPLOAD_DIR, uid))
 
+
 @app.get("/view/{uid}/{filename}", response_class=StreamingResponse)
 @logf(use_print=True)
 async def view_file(uid: str, filename: str):
-
-    filename = ut.safe_name(filename)
-    if filename.endswith(cfg.EXT):
-        filename = filename[: -len(cfg.EXT)]
+    filename = ut.strip_ext(ut.safe_name(filename))
     file_path = op.join(cfg.UPLOAD_DIR, uid, filename + cfg.EXT)
 
     if not op.exists(file_path):

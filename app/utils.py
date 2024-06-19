@@ -80,3 +80,7 @@ def memetype(filename: str) -> str:
 def safe_name(name: str) -> str:
     name = op.basename(name)
     return ''.join(c for c in name if c in cfg.SAFE_CHARS)
+
+
+def strip_ext(name: str) -> str:
+    return name[: -len(cfg.EXT)] if name.endswith(cfg.EXT) else name
