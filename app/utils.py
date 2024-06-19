@@ -1,5 +1,6 @@
-import hashlib
+import re
 import os
+import hashlib
 import os.path as op
 import logging
 from fastapi import UploadFile, HTTPException
@@ -75,6 +76,16 @@ def memetype(filename: str) -> str:
     if not mime_type:
         mime_type = "application/octet-stream"
     return mime_type
+
+
+def safe_name(name: str) -> str:
+    bn = op.basename(name)
+    return ''.join(
+        c
+        for c in bn
+        if c
+        in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.'
+    )
 
 
 def strip_ext(name: str) -> str:

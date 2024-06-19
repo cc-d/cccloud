@@ -18,13 +18,18 @@ const FileUpload = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadedURLs, setUploadedURLs] = useState<string[]>([]);
-  const { uid } = useParams<{ uid: string }>();
+  const [uid, setUID] = useState<string | null>(null);
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       setFiles(Array.from(event.target.files));
     }
   };
+
+  const handleUIDChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUID(event.target.value);
+  }
 
   const handleUpload = async () => {
     if (!files.length || !uid) {
@@ -80,7 +85,8 @@ const FileUpload = () => {
           label="Encryption User ID"
           variant="outlined"
           value={uid || ''}
-          disabled
+          onChange={handleUIDChange}
+
         />
         <Button
           variant="contained"
