@@ -20,7 +20,7 @@ def enc_file(uf: UploadFile, file_path: str, key: str) -> str:
     encryption_key = enc_key(key)
     nonce = os.urandom(12)
     cipher = AESGCM(encryption_key)
-    enc_path = op.join(file_path, cfg.EXT)
+    enc_path = file_path + cfg.EXT
     enc_dir = op.dirname(enc_path)
 
     # Ensure the directory exists
@@ -70,7 +70,7 @@ def sha_dir(key: str) -> str:
     return name
 
 
-def guess_type(filename: str) -> str:
+def memetype(filename: str) -> str:
     mime_type, _ = guess_type(filename, strict=False)
     if not mime_type:
         mime_type = "application/octet-stream"

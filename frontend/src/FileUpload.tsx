@@ -13,7 +13,7 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 
 const FileUpload = () => {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,38 +21,44 @@ const FileUpload = () => {
   const { uid } = useParams<{ uid: string }>();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFile(event.target.files ? event.target.files[0] : null);
+    if (event.target.files) {
+      setFiles(Array.from(event.target.files));
+    }
   };
 
   const handleUpload = async () => {
-    if (!file || !uid) {
-      setError('Please provide both a file and a uid.');
+    if (!files.length || !uid) {
+      setError('Please provide both files and a uid.');
       return;
     }
-
-    const formData = new FormData();
-    formData.append('file', file);
 
     setLoading(true);
     setError(null);
     setSuccess(false);
 
     try {
-      const response = await axios.post(
-        `http://localhost:8000/up/${uid}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+      const uploadedUrlsTemp: string[] = [];
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await axios.post(
+          `http://localhost:8000/up/${uid}`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+        if (response.status === 201) {
+          uploadedUrlsTemp.push(response.data.url);
         }
-      );
-      if (response.status === 201) {
-        setSuccess(true);
-        setUploadedURLs([...uploadedURLs, response.data.url]);
       }
+      setUploadedURLs([...uploadedURLs, ...uploadedUrlsTemp]);
+      setSuccess(true);
     } catch (err) {
-      setError('Failed to upload file. Please try again.');
+      setError('Failed to upload files. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -61,7 +67,7 @@ const FileUpload = () => {
   return (
     <Container maxWidth="sm">
       <Typography variant="h4" component="h1" gutterBottom>
-        Upload File
+        Upload Files
       </Typography>
       <Box
         component="form"
@@ -69,7 +75,7 @@ const FileUpload = () => {
         noValidate
         autoComplete="off"
       >
-        <input type="file" onChange={handleFileChange} />
+        <input type="file" multiple onChange={handleFileChange} />
         <TextField
           label="Encryption User ID"
           variant="outlined"
@@ -103,7 +109,7 @@ const FileUpload = () => {
         onClose={() => setSuccess(false)}
       >
         <Alert onClose={() => setSuccess(false)} severity="success">
-          File uploaded successfully!
+          Files uploaded successfully!
         </Alert>
       </Snackbar>
       <Snackbar

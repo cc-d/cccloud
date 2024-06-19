@@ -61,6 +61,10 @@ async def download_file(uid: str, filename: str):
     response.headers["Transfer-Encoding"] = "chunked"
     return response
 
+@app.get("/files/{uid}", response_model=list[str])
+@logf(use_print=True)
+async def list_files(uid: str):
+    return os.listdir(op.join(cfg.UPLOAD_DIR, uid))
 
 @app.get("/view/{uid}/{filename}", response_class=StreamingResponse)
 @logf(use_print=True)
@@ -75,5 +79,5 @@ async def view_file(uid: str, filename: str):
         raise HTTPException(status_code=404, detail="File not found")
 
     return StreamingResponse(
-        ut.stream_file(file_path, uid), media_type=ut.guess_type(filename)
+        ut.stream_file(file_path, uid), media_type=ut.memetype(filename)
     )
