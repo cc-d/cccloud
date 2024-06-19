@@ -42,8 +42,8 @@ const FileUpload = () => {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await axios.post(
-          `http://localhost:8000/up/${uid}`,
+        const response = await axios.put(
+          `http://localhost:8000/files/${uid}`,
           formData,
           {
             headers: {
