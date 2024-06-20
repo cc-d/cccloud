@@ -16,12 +16,7 @@ function App() {
           }}
         >
           <Typography variant="h6">cccloud</Typography>
-          <Button color="inherit" component={Link} to="/">
-            Home
-          </Button>
-          <Button color="inherit" component={Link} to="/upload">
-            Upload
-          </Button>
+
         </Toolbar>
       </AppBar>
     <FileUpload />

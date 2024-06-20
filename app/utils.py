@@ -3,6 +3,7 @@ import os
 import hashlib
 import os.path as op
 import logging
+import base58 as b58
 from fastapi import UploadFile, HTTPException
 from os import path as op
 from mimetypes import guess_type
@@ -21,27 +22,27 @@ def enc_file(uf: UploadFile, file_path: str, key: str) -> str:
     encryption_key = enc_key(key)
     nonce = os.urandom(12)
     cipher = AESGCM(encryption_key)
-    enc_path = file_path + cfg.EXT
-    enc_dir = op.dirname(enc_path)
+
+    enc_dir = op.dirname(file_path)
 
     # Ensure the directory exists
     if not op.exists(enc_dir):
         os.makedirs(enc_dir)
 
     try:
-        with open(enc_path, 'wb') as enc_file:
+        with open(file_path, 'wb') as enc_file:
             enc_file.write(nonce)
             while chunk := uf.file.read(cfg.CHUNK_SIZE):
                 ciphertext = cipher.encrypt(nonce, chunk, None)
                 chunk_size_bytes = len(ciphertext).to_bytes(4, byteorder='big')
                 enc_file.write(chunk_size_bytes)
                 enc_file.write(ciphertext)
-        logger.info(f"File encrypted successfully: {enc_path}")
+        logger.info(f"File encrypted successfully: {file_path}")
     except Exception as e:
         logger.error(f"Error encrypting file: {str(e)}")
         raise HTTPException(status_code=500, detail="Error encrypting file")
 
-    return enc_path
+    return file_path
 
 
 def stream_file(file_path: str, key: str):
@@ -78,15 +79,13 @@ def memetype(filename: str) -> str:
     return mime_type
 
 
-def safe_name(name: str) -> str:
-    bn = op.basename(name)
-    return ''.join(
-        c
-        for c in bn
-        if c
-        in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.'
-    )
+def b58enc(s: str) -> str:
+    return b58.b58encode(s.encode()).decode()
 
 
-def strip_ext(name: str) -> str:
-    return name[: -len(cfg.EXT)] if name.endswith(cfg.EXT) else name
+def b58dec(s: str) -> str:
+    return b58.b58decode(s).decode()
+
+
+def safe_name(s: str) -> str:
+    return ''.join([c for c in s if c in op.basename(cfg.SAFE_CHARS)])

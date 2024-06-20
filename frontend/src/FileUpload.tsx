@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -8,9 +8,9 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Checkbox
 } from '@mui/material';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
 
 const FileUpload = () => {
   const [files, setFiles] = useState<File[]>([]);
@@ -19,6 +19,7 @@ const FileUpload = () => {
   const [error, setError] = useState<string | null>(null);
   const [uploadedURLs, setUploadedURLs] = useState<string[]>([]);
   const [uid, setUID] = useState<string | null>(null);
+  const [remember, setRemember] = useState(localStorage.getItem('remember') === 'true');
 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,6 +30,14 @@ const FileUpload = () => {
 
   const handleUIDChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUID(event.target.value);
+  }
+
+  const handleRememberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRemember(event.target.checked);
+    localStorage.setItem('remember', event.target.checked.toString());
+    if (remember) {
+      localStorage.setItem('uid', uid || '');
+    }
   }
 
   const handleUpload = async () => {
@@ -69,6 +78,12 @@ const FileUpload = () => {
     }
   };
 
+  useEffect(() => {
+    if (remember && uid === null) {
+      setUID(localStorage.getItem('uid'));
+    }
+  });
+
   return (
     <Container maxWidth="sm">
       <Typography variant="h4" component="h1" gutterBottom>
@@ -88,6 +103,13 @@ const FileUpload = () => {
           onChange={handleUIDChange}
 
         />
+
+        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+          <Typography>Remember me</Typography>
+        <Checkbox name="remember" onChange={handleRememberChange} checked={remember} />
+
+        </Box>
+
         <Button
           variant="contained"
           color="primary"

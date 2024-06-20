@@ -21,5 +21,5 @@ SAFE_CHARS = (
     '0123456789'
     + 'abcdefghijklmnopqrstuvwxyz'
     + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    + '!#$%&()+,-:;<=>?@[]^_`{|} '
+    + '!#$%&()+,-:;<=>?@[]^_`{|} .'
 )
