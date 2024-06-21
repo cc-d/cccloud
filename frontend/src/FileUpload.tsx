@@ -154,7 +154,7 @@ const FileUpload = () => {
         </Alert>
       </Snackbar>
 
-      {uid && <UserFiles uid={uid} />}
+      {uid ? <UserFiles uid={uid} upUrls={uploadedURLs} /> : <Typography>Enter User ID</Typography>}
     </Container>
   );
 };
