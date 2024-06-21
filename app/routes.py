@@ -12,7 +12,7 @@ from .appinit import app
 
 from logfunc import logf
 from . import config as cfg
-
+from . import schema as sch
 from . import utils as ut
 
 
@@ -58,14 +58,16 @@ async def download_file(uid: str, filename: str):
     )
 
 
-@app.get("/files/{uid}", response_model=list[str])
+@app.get("/files/{uid}", response_model=list[sch.File])
 async def list_files(uid: str):
+    encuid = ut.b58enc(uid)
 
-    if not op.exists(op.join(cfg.UPLOAD_DIR, ut.b58enc(uid))):
+    if not op.exists(op.join(cfg.UPLOAD_DIR, encuid)):
         return []
+
     return [
-        cfg.BASE_URL + f'/files/{uid}/view/{ut.b58dec(f)}'
-        for f in os.listdir(op.join(cfg.UPLOAD_DIR, uid))
+        sch.File(url=f"{cfg.BASE_URL}/files/{uid}/view/{ut.b58dec(f)}", fs=f)
+        for f in os.listdir(op.join(cfg.UPLOAD_DIR, encuid))
     ]
 
 

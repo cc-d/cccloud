@@ -4,9 +4,11 @@ import { AppBar, Toolbar, Typography, Container, Button } from '@mui/material';
 import './index.css';
 import './FileUpload';
 import FileUpload from './FileUpload';
+import UserFiles from './UserFiles';
+
 function App() {
   return (
-    <Container disableGutters maxWidth={false} sx={{}}>
+    <Container disableGutters maxWidth={false}>
       <AppBar position="static">
         <Toolbar
           sx={{
@@ -16,10 +18,10 @@ function App() {
           }}
         >
           <Typography variant="h6">cccloud</Typography>
-
         </Toolbar>
       </AppBar>
-    <FileUpload />
+      <FileUpload />
+
     </Container>
   );
 }

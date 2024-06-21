@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Container,
   Typography,
@@ -8,8 +8,11 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  Checkbox
+  Checkbox,
+
 } from '@mui/material';
+import UserFiles from './UserFiles';
+
 import axios from 'axios';
 
 const FileUpload = () => {
@@ -21,7 +24,6 @@ const FileUpload = () => {
   const [uid, setUID] = useState<string | null>(null);
   const [remember, setRemember] = useState(localStorage.getItem('remember') === 'true');
 
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       setFiles(Array.from(event.target.files));
@@ -31,6 +33,7 @@ const FileUpload = () => {
   const handleUIDChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUID(event.target.value);
   }
+
 
   const handleRememberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRemember(event.target.checked);
@@ -82,6 +85,7 @@ const FileUpload = () => {
     if (remember && uid === null) {
       setUID(localStorage.getItem('uid'));
     }
+
   });
 
   return (
@@ -149,6 +153,8 @@ const FileUpload = () => {
           {error}
         </Alert>
       </Snackbar>
+
+      {uid && <UserFiles uid={uid} />}
     </Container>
   );
 };
