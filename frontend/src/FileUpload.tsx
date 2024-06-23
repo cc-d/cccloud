@@ -9,7 +9,8 @@ import {
   Snackbar,
   Alert,
   Checkbox,
-
+  Divider,
+  Input,
 } from '@mui/material';
 import UserFiles from './UserFiles';
 
@@ -22,7 +23,9 @@ const FileUpload = () => {
   const [error, setError] = useState<string | null>(null);
   const [uploadedURLs, setUploadedURLs] = useState<string[]>([]);
   const [uid, setUID] = useState<string | null>(null);
-  const [remember, setRemember] = useState(localStorage.getItem('remember') === 'true');
+  const [remember, setRemember] = useState(
+    localStorage.getItem('remember') === 'true'
+  );
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -32,8 +35,7 @@ const FileUpload = () => {
 
   const handleUIDChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUID(event.target.value);
-  }
-
+  };
 
   const handleRememberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRemember(event.target.checked);
@@ -41,7 +43,7 @@ const FileUpload = () => {
     if (remember) {
       localStorage.setItem('uid', uid || '');
     }
-  }
+  };
 
   const handleUpload = async () => {
     if (!files.length || !uid) {
@@ -85,76 +87,134 @@ const FileUpload = () => {
     if (remember && uid === null) {
       setUID(localStorage.getItem('uid'));
     }
-
   });
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" component="h1" gutterBottom>
-        Upload Files
-      </Typography>
-      <Box
-        component="form"
-        sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-        noValidate
-        autoComplete="off"
-      >
-        <input type="file" multiple onChange={handleFileChange} />
-        <TextField
-          label="Encryption User ID"
-          variant="outlined"
-          value={uid || ''}
-          onChange={handleUIDChange}
+    <Container
+      maxWidth="xl"
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+      }}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', maxWidth: '200px' }}>
+        <Typography variant="h4" component="h4" my={1}>
+          Upload Files
+        </Typography>
 
-        />
+        <Box
+          component="form"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
 
-        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-          <Typography>Remember me</Typography>
-        <Checkbox name="remember" onChange={handleRememberChange} checked={remember} />
-
-        </Box>
-
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleUpload}
-          disabled={loading}
+            height: '250px',
+          }}
+          noValidate
+          autoComplete="off"
         >
-          {loading ? <CircularProgress size={24} /> : 'Upload'}
-        </Button>
-      </Box>
-      <Box>
-        <Typography>Uploaded URLs: </Typography>
-        <ul>
-          {uploadedURLs.map((url, index) => (
-            <li key={index}>
-              <a href={url} target="_blank" rel="noreferrer">
-                {url}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </Box>
-      <Snackbar
-        open={success}
-        autoHideDuration={6000}
-        onClose={() => setSuccess(false)}
-      >
-        <Alert onClose={() => setSuccess(false)} severity="success">
-          Files uploaded successfully!
-        </Alert>
-      </Snackbar>
-      <Snackbar
-        open={Boolean(error)}
-        autoHideDuration={6000}
-        onClose={() => setError(null)}
-      >
-        <Alert onClose={() => setError(null)} severity="error">
-          {error}
-        </Alert>
-      </Snackbar>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <TextField
+              label="Encryption User ID"
+              variant="outlined"
+              value={uid || ''}
+              onChange={handleUIDChange}
+            />
 
-      {uid ? <UserFiles uid={uid} upUrls={uploadedURLs} /> : <Typography>Enter User ID</Typography>}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                overflow: 'hidden',
+                maxHeight: '50px',
+              }}
+            >
+              <Typography>Remember me</Typography>
+              <Checkbox
+                name="remember"
+                onChange={handleRememberChange}
+                checked={remember}
+              />
+            </Box>
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+            }}
+          >
+            <Input
+              type="file"
+              onChange={handleFileChange}
+              inputProps={{ multiple: true }}
+              sx={{
+                m: 0,
+                p: 0,
+              }}
+            />
+
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleUpload}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={24} /> : 'Upload'}
+            </Button>
+          </Box>
+        </Box>
+        <Box>
+          <Typography variant="h5" sx={{}}>
+            Uploaded URLs
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+            }}
+          >
+            {uploadedURLs.map((url, index) => (
+              <a key={index} href={url} target="_blank" rel="noreferrer">
+                {url.replace(RegExp('^.*/files'), '')}
+              </a>
+            ))}
+          </Box>
+        </Box>
+        <Snackbar
+          open={success}
+          autoHideDuration={6000}
+          onClose={() => setSuccess(false)}
+        >
+          <Alert onClose={() => setSuccess(false)} severity="success">
+            Files uploaded successfully!
+          </Alert>
+        </Snackbar>
+        <Snackbar
+          open={Boolean(error)}
+          autoHideDuration={6000}
+          onClose={() => setError(null)}
+        >
+          <Alert onClose={() => setError(null)} severity="error">
+            {error}
+          </Alert>
+        </Snackbar>
+      </Box>
+      {uid ? (
+        <UserFiles uid={uid} upUrls={uploadedURLs} />
+      ) : (
+        <Typography sx={{ m: 5 }} variant="h5">
+          ... enter User ID to view files ...
+        </Typography>
+      )}
     </Container>
   );
 };
