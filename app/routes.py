@@ -26,7 +26,11 @@ def index():
     return {'status': 'ok'}
 
 
-@app.put("/files/{uid}", status_code=status.HTTP_201_CREATED)
+@app.put(
+    "/files/{uid}",
+    status_code=status.HTTP_201_CREATED,
+    response_model=sch.File,
+)
 async def upload_file(uid: str, file: UploadFile = File(...)):
     fname = file.filename
     enc = ut.enc_file(
@@ -34,9 +38,9 @@ async def upload_file(uid: str, file: UploadFile = File(...)):
     )
 
     return {
-        'status': 'ok',
+        'relpath': fname,
         'url': f'{cfg.BASE_URL}/files/{uid}/view/{fname}',
-        'encrypted': enc,
+        'fs': ut.b58enc(fname),
     }
 
 
@@ -66,7 +70,11 @@ async def list_files(uid: str):
         return []
 
     return [
-        sch.File(url=f"{cfg.BASE_URL}/files/{uid}/view/{ut.b58dec(f)}", fs=f)
+        sch.File(
+            url=f"{cfg.BASE_URL}/files/{uid}/view/{ut.b58dec(f)}",
+            fs=f,
+            relpath=ut.b58dec(f),
+        )
         for f in os.listdir(op.join(cfg.UPLOAD_DIR, encuid))
     ]
 

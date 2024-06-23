@@ -13,6 +13,7 @@ class UploadFiles(ApiResp):
 class File(BaseModel):
     url: str
     fs: str
+    relpath: str
 
 
 class ListFiles(BaseModel):

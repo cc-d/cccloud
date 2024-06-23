@@ -13,6 +13,7 @@ import {
   Input,
 } from '@mui/material';
 import UserFiles from './UserFiles';
+import {EncFile} from './types';
 
 import axios from 'axios';
 
@@ -21,7 +22,7 @@ const FileUpload = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploadedURLs, setUploadedURLs] = useState<string[]>([]);
+  const [uploadedURLs, setUploadedURLs] = useState<EncFile[]>([]);
   const [uid, setUID] = useState<string | null>(null);
   const [remember, setRemember] = useState(
     localStorage.getItem('remember') === 'true'
@@ -56,12 +57,12 @@ const FileUpload = () => {
     setSuccess(false);
 
     try {
-      const uploadedUrlsTemp: string[] = [];
+      const uploaded: EncFile[] = [];
       for (const file of files) {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await axios.put(
+        const response= await axios.put(
           `http://localhost:8000/files/${uid}`,
           formData,
           {
@@ -71,10 +72,11 @@ const FileUpload = () => {
           }
         );
         if (response.status === 201) {
-          uploadedUrlsTemp.push(response.data.url);
+          uploaded.push(response.data);
         }
       }
-      setUploadedURLs([...uploadedURLs, ...uploadedUrlsTemp]);
+      setUploadedURLs(uploaded);
+      console.log(uploaded);
       setSuccess(true);
     } catch (err) {
       setError('Failed to upload files. Please try again.');
@@ -89,6 +91,7 @@ const FileUpload = () => {
     }
   });
 
+
   return (
     <Container
       maxWidth="xl"
@@ -99,7 +102,7 @@ const FileUpload = () => {
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', maxWidth: '200px' }}>
         <Typography variant="h4" component="h4" my={1}>
-          Upload Files
+          Upload
         </Typography>
 
         <Box
@@ -117,6 +120,7 @@ const FileUpload = () => {
             sx={{
               display: 'flex',
               flexDirection: 'column',
+              width: '150px',
             }}
           >
             <TextField
@@ -135,7 +139,7 @@ const FileUpload = () => {
                 maxHeight: '50px',
               }}
             >
-              <Typography>Remember me</Typography>
+              <Typography>Remember</Typography>
               <Checkbox
                 name="remember"
                 onChange={handleRememberChange}
@@ -183,8 +187,8 @@ const FileUpload = () => {
             }}
           >
             {uploadedURLs.map((url, index) => (
-              <a key={index} href={url} target="_blank" rel="noreferrer">
-                {url.replace(RegExp('^.*/files'), '')}
+              <a key={index} href={url.url} target="_blank" rel="noreferrer">
+                {url.url.replace(RegExp('^.*/files'), '')}
               </a>
             ))}
           </Box>

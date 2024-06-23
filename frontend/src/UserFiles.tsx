@@ -1,67 +1,103 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  Grid,
   Card,
   CardMedia,
   Divider,
   Typography,
   Box,
   Link,
-  Icon,
-  CardHeader,
   CardContent,
-  CardActions,
-  Button,
-  IconButton,
   CardActionArea,
-  CardMediaTypeMap,
+  Button,
 } from '@mui/material';
-import { CardMediaProps } from '@mui/material/CardMedia';
-import { FileOpen as OtherIcon } from '@mui/icons-material';
-import { blueGrey } from '@mui/material/colors';
+import FolderIcon from '@mui/icons-material/Folder';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { EncFile } from './types';
+import { FileOpen as OtherIcon, PlayCircleFilled as PlayIcon } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 
-/*
-// Component to handle different types of media files
-const MediaFile = ({ url }: { url: string }) => {
-  const attrs = {
-    component: url.endsWith('.mp4') ? 'video' : ['png', 'jpg', 'jpeg', 'gif', 'heic'].includes(url.toLowerCase().split('.').pop()!) ? 'img' : 'other',
-    sx: { height: 140 },
-  };
-
-  return attrs.component === 'video' ? (
-    <CardMedia {...attrs} controls src={url} />
-  ) : attrs.component === 'img' ? (
-    <CardMedia {...attrs} image={url} />
-  ) : (
-    <CardMedia {...attrs} />
-  );
-};
-
-*/
-
-interface UrlMediaCardProps extends CardMediaProps {
+interface UrlMediaCardProps {
   url: string;
 }
 
-const UrlCardMedia: React.FC<UrlMediaCardProps> = ({
-  ...props
-}: UrlMediaCardProps) => {
+const getDirectoriesAndFiles = (files: EncFile[], path: string | undefined) => {
+  if (!path) {
+    return {
+      directories: [],
+      files: files,
+    };
+  }
+
+  const directories = new Set<string>();
+  const fileList: EncFile[] = [];
+
+  files.forEach((file) => {
+    const relativePath = file.relpath.replace(/^\//, '');
+    if (relativePath.startsWith(path)) {
+      const remainingPath = relativePath.slice(path.length).replace(/^\//, '');
+      if (remainingPath.includes('/')) {
+        directories.add(remainingPath.split('/')[0]);
+      } else {
+        fileList.push(file);
+      }
+    }
+  });
+  console.log('directories', directories, 'files', fileList);
+  return {
+    directories: Array.from(directories),
+    files: fileList,
+  };
+};
+
+const UrlCardMedia: React.FC<UrlMediaCardProps> = ({ url }: UrlMediaCardProps) => {
+  const theme = useTheme();
   const [src, setSrc] = useState<string | undefined>(undefined);
 
   const onClick = () => {
-    setSrc(props.url);
+    setSrc(url);
   };
 
-  return (
-    <CardMedia
-      component="video"
-      src={src}
-      onClick={onClick}
-      {...props}
-      controls={true}
-    />
-  );
+  if (src) {
+    return (
+      <CardMedia
+        component="video"
+        src={src}
+        onClick={onClick}
+        controls={true}
+        sx={{ display: 'flex', flexGrow: 1, maxWidth: 300, maxHeight: 300 }}
+      />
+    );
+  } else {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          cursor: 'pointer',
+          height: '100%',
+        }}
+        onClick={onClick}
+      >
+        <PlayIcon
+          sx={{
+            color: theme.palette.text.primary,
+            height: 90,
+            width: 90,
+            opacity: 0.5,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        />
+        <Typography variant="h5" color="text.primary">
+          Click to play
+        </Typography>
+      </Box>
+    );
+  }
 };
 
 const MediaFile = ({ url }: { url: string }) => {
@@ -75,10 +111,10 @@ const MediaFile = ({ url }: { url: string }) => {
     },
   };
   return lurl.endsWith('.mp4') ? (
-    <UrlCardMedia component="video" url={url} {...props} />
+    <UrlCardMedia url={url} {...props} />
   ) : ['png', 'jpg', 'jpeg', 'gif', 'heic'].includes(
-      url.toLowerCase().split('.').pop()!
-    ) ? (
+    url.toLowerCase().split('.').pop()!
+  ) ? (
     <CardMedia component="img" image={url} {...props} />
   ) : (
     <CardMedia
@@ -88,12 +124,18 @@ const MediaFile = ({ url }: { url: string }) => {
     </CardMedia>
   );
 };
+
 const shortUrl = (url: string) => {
   return url.split('/').slice(-1)[0];
 };
 
-const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: string[] }) => {
-  const [files, setFiles] = useState<{ url: string; fs: string }[]>([]);
+const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: EncFile[] }) => {
+  const [files, setFiles] = useState<EncFile[]>([]);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const fsPath = searchParams.get('path') || '';
+
   const fetchFiles = async () => {
     if (uid) {
       try {
@@ -107,12 +149,23 @@ const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: string[] }) => {
 
   useEffect(() => {
     fetchFiles();
-    if (upUrls.length > 0) {
-      setFiles(files.concat(upUrls.map((url) => ({ url, fs: 'fs' }))));
-    }
   }, [uid, upUrls]);
 
-  if (files.length === 0) {
+  const { directories, files: fileList } = getDirectoriesAndFiles(files, fsPath);
+
+  const handleDirectoryClick = (dir: string) => {
+    const newPath = fsPath ? `${fsPath}/${dir}` : dir;
+    navigate(`?path=${newPath}`);
+  };
+
+  const handleBackClick = () => {
+    const segments = fsPath.split('/').filter(Boolean);
+    segments.pop();
+    const newPath = segments.join('/');
+    navigate(newPath ? `?path=${newPath}` : '');
+  };
+
+  if (!files.length) {
     return <Box>No files found for UID: {uid}</Box>;
   }
 
@@ -121,12 +174,11 @@ const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: string[] }) => {
       <Divider
         sx={{
           width: '2px',
-          backgroundColor: '#78909c',
+          backgroundColor: 'primary.secondary',
           borderRadius: '8px',
           m: 1,
         }}
       />
-
       <Box
         sx={{
           ml: 1,
@@ -135,7 +187,11 @@ const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: string[] }) => {
         <Typography variant="h4" sx={{ my: 1 }}>
           Files
         </Typography>
-
+        {fsPath && (
+          <Button onClick={handleBackClick} variant="contained" color="primary">
+            Back
+          </Button>
+        )}
         <Box
           sx={{
             display: 'flex',
@@ -144,14 +200,43 @@ const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: string[] }) => {
             gap: 1,
           }}
         >
-          {files.map((file, index) => (
+          {directories.map((dir, index) => (
             <Card
               key={index}
               sx={{
                 display: 'flex',
-                minWidth: '200px',
-
-                flexDirection: 'row',
+                minWidth: '100px',
+                maxWidth: '200px',
+                flexDirection: 'column',
+                alignItems: 'center',
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+              onClick={() => handleDirectoryClick(dir)}
+            >
+              <CardContent
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  p: 2,
+                }}
+              >
+                <FolderIcon fontSize="large" />
+                <Typography variant="h6">{dir}</Typography>
+              </CardContent>
+            </Card>
+          ))}
+          {fileList.map((file, index) => (
+            <Card
+              key={index}
+              sx={{
+                display: 'flex',
+                minWidth: '100px',
+                maxWidth: '200px',
+                flexDirection: 'column',
+                alignItems: 'center',
                 backgroundColor: 'rgba(0, 0, 0, 0.1)',
                 borderRadius: '8px',
               }}
@@ -160,11 +245,10 @@ const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: string[] }) => {
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
+                  alignItems: 'center',
                   p: 1,
                   flexGrow: 1,
                   overflow: 'hidden',
-
-                  alignItems: 'center',
                 }}
               >
                 <Link
@@ -175,7 +259,6 @@ const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: string[] }) => {
                   component={'a'}
                   sx={{
                     color: 'inherit',
-
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -183,8 +266,7 @@ const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: string[] }) => {
                 >
                   {shortUrl(file.url)}
                 </Link>
-
-                <MediaFile url={file.url} key={index} />
+                <MediaFile url={file.url} />
               </CardContent>
             </Card>
           ))}
