@@ -13,7 +13,7 @@ import {
   Input,
 } from '@mui/material';
 import UserFiles from './UserFiles';
-import {EncFile} from './types';
+import { EncFile } from './types';
 
 import axios from 'axios';
 
@@ -62,7 +62,7 @@ const FileUpload = () => {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response= await axios.put(
+        const response = await axios.put(
           `http://localhost:8000/files/${uid}`,
           formData,
           {
@@ -90,7 +90,6 @@ const FileUpload = () => {
       setUID(localStorage.getItem('uid'));
     }
   });
-
 
   return (
     <Container
