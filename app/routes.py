@@ -37,34 +37,40 @@ def index():
 
 
 @app.put(
-    "/files/{uid}",
+    "/files/{cccid}",
     status_code=status.HTTP_201_CREATED,
     response_model=sch.File,
 )
-async def upload_file(uid: str, file: UploadFile = File(...)):
+async def upload_file(
+    cccid: str, file: UploadFile = File(...), secret: str = Depends(get_secret)
+):
 
     fname = file.filename
     enc = ut.enc_file(
-        file, op.join(cfg.UPLOAD_DIR, ut.b58enc(uid), ut.b58enc(fname)), uid
+        file,
+        op.join(cfg.UPLOAD_DIR, ut.b58enc(cccid), ut.b58enc(fname)),
+        secret,
     )
 
     return {
         'relpath': fname,
-        'url': f'{cfg.BASE_URL}/files/{uid}/view/{fname}',
+        'url': f'{cfg.BASE_URL}/files/{cccid}/view/{fname}',
         'fs': ut.b58enc(fname),
     }
 
 
-@app.get("/files/{uid}/dl/{filename}", response_class=StreamingResponse)
-async def download_file(uid: str, filename: str):
+@app.get("/files/{cccid}/dl/{filename}", response_class=StreamingResponse)
+async def download_file(
+    cccid: str, filename: str, secret: str = Depends(get_secret)
+):
 
-    file_path = op.join(cfg.UPLOAD_DIR, ut.b58enc(uid), ut.b58enc(filename))
+    file_path = op.join(cfg.UPLOAD_DIR, ut.b58enc(cccid), ut.b58enc(filename))
 
     if not op.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
     return StreamingResponse(
-        ut.stream_file(file_path, uid),
+        ut.stream_file(file_path, secret),
         media_type="application/octet-stream",
         headers={
             "Content-Disposition": f"attachment; filename={filename}",
@@ -73,29 +79,33 @@ async def download_file(uid: str, filename: str):
     )
 
 
-@app.get("/files/{uid}", response_model=list[sch.File])
-async def list_files(uid: str):
-    encuid = ut.b58enc(uid)
+@app.get("/files/{cccid}", response_model=list[sch.File])
+async def list_files(cccid: str):
+    enccccid = ut.b58enc(cccid)
 
-    if not op.exists(op.join(cfg.UPLOAD_DIR, encuid)):
+    if not op.exists(op.join(cfg.UPLOAD_DIR, enccccid)):
         return []
 
     return [
         sch.File(
-            url=f"{cfg.BASE_URL}/files/{uid}/view/{ut.b58dec(f)}",
+            url=f"{cfg.BASE_URL}/files/{cccid}/view/{ut.b58dec(f)}",
             fs=f,
             relpath=ut.b58dec(f),
         )
-        for f in os.listdir(op.join(cfg.UPLOAD_DIR, encuid))
+        for f in os.listdir(op.join(cfg.UPLOAD_DIR, enccccid))
     ]
 
 
-@app.get("/files/{uid}/view/{filename}", response_class=StreamingResponse)
-async def view_file(uid: str, filename: str):
+@app.get("/files/{cccid}/view/{filename}", response_class=StreamingResponse)
+async def view_file(
+    cccid: str, filename: str, secret: str = Depends(get_secret)
+):
     mtype = ut.memetype(filename)
 
-    file_path = op.join(cfg.UPLOAD_DIR, ut.b58enc(uid), ut.b58enc(filename))
+    file_path = op.join(cfg.UPLOAD_DIR, ut.b58enc(cccid), ut.b58enc(filename))
     if not op.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
-    return StreamingResponse(ut.stream_file(file_path, uid), media_type=mtype)
+    return StreamingResponse(
+        ut.stream_file(file_path, secret), media_type=mtype
+    )

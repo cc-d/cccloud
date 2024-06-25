@@ -17,16 +17,18 @@ import { EncFile } from './types';
 
 import axios from 'axios';
 
-const FileUpload = () => {
+const FileUpload = ({
+  cccId,
+  secret,
+}: {
+  cccId: string | null;
+  secret: string | null;
+}) => {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadedURLs, setUploadedURLs] = useState<EncFile[]>([]);
-  const [uid, setUID] = useState<string | null>(null);
-  const [remember, setRemember] = useState(
-    localStorage.getItem('remember') === 'true'
-  );
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -34,21 +36,9 @@ const FileUpload = () => {
     }
   };
 
-  const handleUIDChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUID(event.target.value);
-  };
-
-  const handleRememberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRemember(event.target.checked);
-    localStorage.setItem('remember', event.target.checked.toString());
-    if (remember) {
-      localStorage.setItem('uid', uid || '');
-    }
-  };
-
   const handleUpload = async () => {
-    if (!files.length || !uid) {
-      setError('Please provide both files and a uid.');
+    if (!files.length || !cccId) {
+      setError('Please provide both files and a cccId.');
       return;
     }
 
@@ -63,11 +53,12 @@ const FileUpload = () => {
         formData.append('file', file);
 
         const response = await axios.put(
-          `http://localhost:8000/files/${uid}`,
+          `http://localhost:8000/files/${cccId}`,
           formData,
           {
             headers: {
               'Content-Type': 'multipart/form-data',
+              Authorization: cccId,
             },
           }
         );
@@ -84,12 +75,6 @@ const FileUpload = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (remember && uid === null) {
-      setUID(localStorage.getItem('uid'));
-    }
-  });
 
   return (
     <Container
@@ -115,38 +100,6 @@ const FileUpload = () => {
           noValidate
           autoComplete="off"
         >
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              width: '150px',
-            }}
-          >
-            <TextField
-              label="Encryption User ID"
-              variant="outlined"
-              value={uid || ''}
-              onChange={handleUIDChange}
-            />
-
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                overflow: 'hidden',
-                maxHeight: '50px',
-              }}
-            >
-              <Typography>Remember</Typography>
-              <Checkbox
-                name="remember"
-                onChange={handleRememberChange}
-                checked={remember}
-              />
-            </Box>
-          </Box>
-
           <Box
             sx={{
               display: 'flex',
@@ -211,8 +164,8 @@ const FileUpload = () => {
           </Alert>
         </Snackbar>
       </Box>
-      {uid ? (
-        <UserFiles uid={uid} upUrls={uploadedURLs} />
+      {cccId !== null && secret !== null ? (
+        <UserFiles cccId={cccId} upUrls={uploadedURLs} secret={secret} />
       ) : (
         <Typography sx={{ m: 5 }} variant="h5">
           ... enter User ID to view files ...

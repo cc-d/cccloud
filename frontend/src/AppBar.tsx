@@ -1,0 +1,116 @@
+// FILE: frontend/src/AppBar.tsx
+import React from 'react';
+import {
+  AppBar as MuiAppBar,
+  Toolbar,
+  Typography,
+  Box,
+  TextField,
+  Checkbox,
+} from '@mui/material';
+
+interface AppBarProps {
+  cccId: string | null;
+  secret: string | null;
+  rememberCccId: boolean | null;
+  rememberSecret: boolean | null;
+  handleCccIdChange: React.ChangeEventHandler<HTMLInputElement>;
+  handleSecretChange: React.ChangeEventHandler<HTMLInputElement>;
+  handleRememberCccIdChange: React.ChangeEventHandler<HTMLInputElement>;
+  handleRememberSecretChange: React.ChangeEventHandler<HTMLInputElement>;
+}
+
+const IdSecInput = ({
+  value,
+  type,
+  remember,
+  onChange,
+  handleRememberChange,
+}: {
+  value: string | null;
+  type: 'cccid' | 'secret';
+  remember: boolean | null;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
+  handleRememberChange: React.ChangeEventHandler<HTMLInputElement>;
+}) => {
+  const label = type === 'cccid' ? 'ID' : 'Secret';
+  const inputType = type === 'cccid' ? 'text' : 'password';
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        maxWidth: '200px',
+      }}
+    >
+      <TextField
+        label={label}
+        variant="standard"
+        value={value || ''}
+        onChange={onChange}
+        type={inputType}
+      />
+
+      <Checkbox
+        checked={remember !== null && remember !== false}
+        onChange={handleRememberChange}
+        color="default"
+      />
+    </Box>
+  );
+};
+
+const AppBar: React.FC<AppBarProps> = ({
+  cccId,
+  secret,
+  rememberCccId,
+  rememberSecret,
+  handleCccIdChange,
+  handleSecretChange,
+  handleRememberCccIdChange,
+  handleRememberSecretChange,
+}) => {
+  return (
+    <MuiAppBar
+      position="static"
+      sx={{ backgroundColor: 'primary.main', p: 0.5 }}
+    >
+      <Toolbar
+        sx={{
+          justifyContent: 'space-between',
+        }}
+      >
+        <Typography variant="h6">cccloud</Typography>
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            flexGrow: 1,
+            maxWidth: '500px',
+            alignItems: 'center',
+          }}
+        >
+          <IdSecInput
+            value={cccId}
+            type="cccid"
+            remember={rememberCccId}
+            onChange={handleCccIdChange}
+            handleRememberChange={handleRememberCccIdChange}
+          />
+          <IdSecInput
+            value={secret}
+            type="secret"
+            remember={rememberSecret}
+            onChange={handleSecretChange}
+            handleRememberChange={handleRememberSecretChange}
+          />
+        </Box>
+      </Toolbar>
+    </MuiAppBar>
+  );
+};
+
+export default AppBar;

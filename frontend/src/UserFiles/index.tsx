@@ -17,7 +17,15 @@ import { EncFile } from '../types';
 import { getDirectoriesAndFiles, shortUrl } from './utils';
 import { MediaFile, ItemCard } from './comps';
 
-const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: EncFile[] }) => {
+const UserFiles = ({
+  cccId,
+  upUrls,
+  secret,
+}: {
+  cccId: string;
+  upUrls: EncFile[];
+  secret: string;
+}) => {
   const [files, setFiles] = useState<EncFile[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -25,9 +33,11 @@ const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: EncFile[] }) => {
   const fsPath = searchParams.get('path') || '';
 
   const fetchFiles = async () => {
-    if (uid) {
+    if (cccId) {
       try {
-        const response = await axios.get(`http://localhost:8000/files/${uid}`);
+        const response = await axios.get(
+          `http://localhost:8000/files/${cccId}`
+        );
         setFiles(response.data);
       } catch (error) {
         console.error(error);
@@ -37,7 +47,7 @@ const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: EncFile[] }) => {
 
   useEffect(() => {
     fetchFiles();
-  }, [uid, upUrls]);
+  }, [cccId, upUrls]);
 
   const { directories, files: fileList } = getDirectoriesAndFiles(
     files,
@@ -57,7 +67,7 @@ const UserFiles = ({ uid, upUrls }: { uid: string; upUrls: EncFile[] }) => {
   };
 
   if (!files.length) {
-    return <Box>No files found for UID: {uid}</Box>;
+    return <Box>No files found for UID: {cccId}</Box>;
   }
 
   return (
