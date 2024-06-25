@@ -15,7 +15,7 @@ import FolderIcon from '@mui/icons-material/Folder';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { EncFile } from '../types';
 import { getDirectoriesAndFiles, shortUrl } from './utils';
-import { MediaFile, ItemCard } from './comps';
+import { MediaFile, ItemCard, DirFile } from './comps';
 
 const UserFiles = ({
   cccId,
@@ -124,24 +124,12 @@ const UserFiles = ({
             </ItemCard>
           ))}
           {fileList.map((file, index) => (
-            <ItemCard key={index} name={shortUrl(file.url)}>
-              <Link
-                href={file.url}
-                target="_blank"
-                variant="h6"
-                rel="noreferrer"
-                component={'a'}
-                sx={{
-                  color: 'inherit',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {shortUrl(file.url)}
-              </Link>
-              <MediaFile url={file.url} />
-            </ItemCard>
+            <DirFile
+              key={index}
+              file={file}
+              secret={secret}
+              onClick={() => {}}
+            />
           ))}
         </Box>
       </Box>

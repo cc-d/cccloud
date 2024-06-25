@@ -12,11 +12,13 @@ import {
   Button,
 } from '@mui/material';
 import {
-  FileOpen as OtherIcon,
+  FileDownload as OtherIcon,
   PlayCircleFilled as PlayIcon,
 } from '@mui/icons-material';
+import FolderIcon from '@mui/icons-material/Folder';
 import { useTheme } from '@mui/material/styles';
-
+import { EncFile } from '../types';
+import { shortUrl } from './utils';
 interface UrlMediaCardProps {
   url: string;
 }
@@ -55,7 +57,7 @@ const UrlCardMedia = ({ url }: UrlMediaCardProps) => {
       >
         <PlayIcon
           sx={{
-            color: theme.palette.text.primary,
+            color: 'primary.main',
             height: 90,
             width: 90,
             opacity: 0.5,
@@ -71,7 +73,13 @@ const UrlCardMedia = ({ url }: UrlMediaCardProps) => {
   }
 };
 
-export const MediaFile = ({ url }: { url: string }) => {
+export const MediaFile = ({
+  url,
+  secret,
+}: {
+  url: string;
+  secret: string | undefined;
+}) => {
   const lurl = url.toLowerCase();
   const props = {
     sx: {
@@ -79,19 +87,22 @@ export const MediaFile = ({ url }: { url: string }) => {
       flexGrow: 1,
       maxWidth: 300,
       maxHeight: 300,
+      color: 'primary.main',
     },
   };
   return lurl.endsWith('.mp4') ? (
-    <UrlCardMedia url={url} {...props} />
+    <UrlCardMedia url={`${url}?secret=${secret}`} {...props} />
   ) : ['png', 'jpg', 'jpeg', 'gif', 'heic'].includes(
       url.toLowerCase().split('.').pop()!
     ) ? (
-    <CardMedia component="img" image={url} {...props} />
+    <CardMedia component="img" image={`${url}?secret=${secret}`} {...props} />
   ) : (
     <CardMedia
       sx={{ ...props['sx'], alignItems: 'center', justifyContent: 'center' }}
     >
-      <OtherIcon sx={{ ...props['sx'], height: 150, width: 150 }} />
+      <Link href={`${url}?secret=${secret}`}>
+        <OtherIcon sx={{ ...props['sx'], height: 150, width: 150 }} />
+      </Link>
     </CardMedia>
   );
 };
@@ -132,3 +143,121 @@ export const ItemCard = ({
     </CardContent>
   </Card>
 );
+
+export const DirFile = ({
+  key,
+  file,
+  dir,
+  onClick,
+  fsPath,
+  secret,
+}: {
+  key: number;
+  dir?: string;
+  file?: EncFile;
+  onClick?: () => void;
+  fsPath?: string;
+  secret?: string;
+}) => {
+  const name = dir || shortUrl(file!.url);
+  const href = file
+    ? `${file.url}?secret=${secret}`
+    : fsPath
+    ? `${fsPath}/${dir}`
+    : dir;
+  const linkTxt = file ? shortUrl(file.url) : dir;
+
+  const dfLink = (
+    <Link
+      href={href}
+      target="_blank"
+      variant="h6"
+      rel="noreferrer"
+      component={'a'}
+      sx={{
+        color: 'inherit',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {linkTxt}
+    </Link>
+  );
+
+  if (file) {
+    return (
+      <ItemCard name={name} onClick={onClick}>
+        {dfLink}
+        <MediaFile url={file.url} secret={secret} />
+      </ItemCard>
+    );
+  } else {
+    return (
+      <ItemCard name={name} onClick={onClick}>
+        {dfLink}
+        <FolderIcon sx={{ height: 80, width: 80 }} />
+      </ItemCard>
+    );
+  }
+};
+
+/*
+  ) : (
+    <Link
+      href={`?path=${fsPath ? `${fsPath}/${name}` : name}`}
+      variant="h6"
+      component={'a'}
+      sx={{
+        color: 'inherit',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {name}
+    </Link>*/
+
+/*
+  {directories.map((dir, index) => (
+    <ItemCard
+      key={index}
+      name={dir}
+      onClick={() => handleDirectoryClick(dir)}
+    >
+      <Link
+        href={`?path=${fsPath ? `${fsPath}/${dir}` : dir}`}
+        variant="h6"
+        component={'a'}
+        sx={{
+          color: 'inherit',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {dir}
+      </Link>
+      <FolderIcon sx={{ height: 80, width: 80 }} />
+    </ItemCard>
+  ))}
+  {fileList.map((file, index) => (
+    <ItemCard key={index} name={shortUrl(file.url)}>
+      <Link
+        href={file.url}
+        target="_blank"
+        variant="h6"
+        rel="noreferrer"
+        component={'a'}
+        sx={{
+          color: 'inherit',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {shortUrl(file.url)}
+      </Link>
+      <MediaFile url={file.url} />
+    </ItemCard>
+  ))}*/

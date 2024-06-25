@@ -1,5 +1,7 @@
 // FILE: frontend/src/AppBar.tsx
 import React from 'react';
+
+import { useEffect } from 'react';
 import {
   AppBar as MuiAppBar,
   Toolbar,
@@ -46,10 +48,16 @@ const IdSecInput = ({
     >
       <TextField
         label={label}
-        variant="standard"
+        variant="filled"
         value={value || ''}
         onChange={onChange}
         type={inputType}
+        size="small"
+        sx={{
+          backgroundColor: 'rgba(0,0,0, 0.2)',
+          flexGrow: 1,
+          borderRadius: 1,
+        }}
       />
 
       <Checkbox

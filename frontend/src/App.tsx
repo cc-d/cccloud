@@ -22,7 +22,6 @@ function App() {
   };
 
   const handleRememberCccIdChange = () => {
-    console.log('remember cccid');
     if (!cccId) {
       return;
     }
@@ -36,7 +35,6 @@ function App() {
   };
 
   const handleRememberSecretChange = () => {
-    console.log('remember secret');
     if (!secret) {
       return;
     }
@@ -51,21 +49,16 @@ function App() {
 
   useEffect(() => {
     if (rememberCccId === null) {
-      setRememberCccId(localStorage.getItem('cccid') !== null);
+      const cccId = localStorage.getItem('cccid');
+      setRememberCccId(cccId !== null);
+      cccId !== null && setCccId(cccId);
     }
     if (rememberSecret === null) {
-      setRememberSecret(localStorage.getItem('secret') !== null);
+      const secret = localStorage.getItem('secret');
+      setRememberSecret(secret !== null);
+      secret !== null && setSecret(secret);
     }
   }, [rememberCccId, rememberSecret]);
-
-  useEffect(() => {
-    if (rememberCccId && cccId) {
-      localStorage.setItem('cccid', cccId);
-    }
-    if (rememberSecret && secret) {
-      localStorage.setItem('secret', secret);
-    }
-  }, []);
 
   return (
     <ThemeProvider theme={theme}>
