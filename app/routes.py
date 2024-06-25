@@ -4,7 +4,16 @@ import logging
 import os.path as op
 from hashlib import sha256
 from pyshared import U, Opt, Gen
-from fastapi import FastAPI, HTTPException, UploadFile, File, Query, status
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    UploadFile,
+    File,
+    Query,
+    status,
+    Header,
+    Depends,
+)
 from fastapi.responses import StreamingResponse, Response
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -14,6 +23,7 @@ from logfunc import logf
 from . import config as cfg
 from . import schema as sch
 from . import utils as ut
+from .depends import get_secret
 
 
 logr = logging.getLogger(__name__)
@@ -32,6 +42,7 @@ def index():
     response_model=sch.File,
 )
 async def upload_file(uid: str, file: UploadFile = File(...)):
+
     fname = file.filename
     enc = ut.enc_file(
         file, op.join(cfg.UPLOAD_DIR, ut.b58enc(uid), ut.b58enc(fname)), uid
