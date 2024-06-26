@@ -2,7 +2,6 @@
 import base58 as b58
 import sys
 import os
-import os.path as op
 
 
 def main():
