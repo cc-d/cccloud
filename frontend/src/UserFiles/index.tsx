@@ -71,7 +71,7 @@ const UserFiles = ({
   }
 
   return (
-    <>
+    <Box sx={{ mt: -4 }}>
       <Divider
         sx={{
           width: '2px',
@@ -85,14 +85,45 @@ const UserFiles = ({
           ml: 1,
         }}
       >
-        <Typography variant="h4" sx={{ my: 1 }}>
-          Files
-        </Typography>
-        {fsPath && (
-          <Button onClick={handleBackClick} variant="contained" color="primary">
-            Back
-          </Button>
-        )}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+          }}
+        >
+          {fsPath && (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 1,
+              }}
+            >
+              <Typography sx={{ my: 1, maxHeight: 28 }}>{fsPath}</Typography>
+              <Button
+                onClick={handleBackClick}
+                variant="contained"
+                color="primary"
+                size="small"
+                sx={{
+                  display: 'flex',
+                  maxHeight: 28,
+
+                  fontWeight: 'bold',
+                }}
+              >
+                &lt;- {fsPath.replace(/[^/]+$/, '')}
+              </Button>
+            </Box>
+          )}
+          <Divider
+            sx={{
+              my: 1,
+            }}
+          />
+        </Box>
         <Box
           sx={{
             display: 'flex',
@@ -133,7 +164,7 @@ const UserFiles = ({
           ))}
         </Box>
       </Box>
-    </>
+    </Box>
   );
 };
 

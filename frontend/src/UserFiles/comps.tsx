@@ -19,6 +19,22 @@ import FolderIcon from '@mui/icons-material/Folder';
 import { useTheme } from '@mui/material/styles';
 import { EncFile } from '../types';
 import { shortUrl } from './utils';
+import { useNavigate } from 'react-router-dom';
+import { red } from '@mui/material/colors';
+
+const dfLinkSx = {
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  maxWidth: '100%',
+  maxHeight: '100%',
+  display: 'block',
+  color: 'inherit',
+  m: 0.5,
+
+  cursor: 'pointer',
+};
+
 interface UrlMediaCardProps {
   url: string;
 }
@@ -26,6 +42,7 @@ interface UrlMediaCardProps {
 const UrlCardMedia = ({ url }: UrlMediaCardProps) => {
   const theme = useTheme();
   const [src, setSrc] = useState<string | undefined>(undefined);
+  const [nav, setNav] = useState(false);
 
   const onClick = () => {
     setSrc(url);
@@ -38,7 +55,7 @@ const UrlCardMedia = ({ url }: UrlMediaCardProps) => {
         src={src}
         onClick={onClick}
         controls={true}
-        sx={{ display: 'flex', flexGrow: 1, maxWidth: 300, maxHeight: 300 }}
+        sx={{ display: 'flex', flexGrow: 1, maxWidth: 200, maxHeight: 200 }}
       />
     );
   } else {
@@ -125,7 +142,7 @@ export const ItemCard = ({
       alignItems: 'center',
       backgroundColor: 'rgba(0, 0, 0, 0.1)',
       borderRadius: '8px',
-      cursor: onClick ? 'pointer' : 'default',
+      cursor: 'pointer',
     }}
     onClick={onClick}
   >
@@ -144,45 +161,58 @@ export const ItemCard = ({
   </Card>
 );
 
+export const DFLink = ({ url }: { url: string }) => {
+  return (
+    <Link
+      href={url}
+      target="_blank"
+      variant="h6"
+      rel="noreferrer"
+      component={'a'}
+      sx={dfLinkSx}
+    >
+      {shortUrl(url)}
+    </Link>
+  );
+};
+
 export const DirFile = ({
+  secret,
   key,
   file,
   dir,
   onClick,
   fsPath,
-  secret,
 }: {
+  secret: string;
   key: number;
   dir?: string;
   file?: EncFile;
   onClick?: () => void;
   fsPath?: string;
-  secret?: string;
 }) => {
-  const name = dir || shortUrl(file!.url);
-  const href = file
-    ? `${file.url}?secret=${secret}`
-    : fsPath
-    ? `${fsPath}/${dir}`
-    : dir;
+  const name = dir ? dir : file ? shortUrl(file.url) : 'unknown';
   const linkTxt = file ? shortUrl(file.url) : dir;
 
   const dfLink = (
-    <Link
-      href={href}
-      target="_blank"
-      variant="h6"
-      rel="noreferrer"
-      component={'a'}
+    <Box
       sx={{
-        color: 'inherit',
+        maxWidth: '200px',
+        maxHeight: '100%',
         overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
       }}
     >
-      {linkTxt}
-    </Link>
+      <Link
+        href={file ? file.url : fsPath}
+        target="_blank"
+        variant="h6"
+        rel="noreferrer"
+        component={'a'}
+        sx={{ ...dfLinkSx }}
+      >
+        {linkTxt}
+      </Link>
+    </Box>
   );
 
   if (file) {
@@ -196,7 +226,7 @@ export const DirFile = ({
     return (
       <ItemCard name={name} onClick={onClick}>
         {dfLink}
-        <FolderIcon sx={{ height: 80, width: 80 }} />
+        <FolderIcon sx={{ maxHeight: 100, maxWidth: 100 }} />
       </ItemCard>
     );
   }

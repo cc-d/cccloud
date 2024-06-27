@@ -17,6 +17,95 @@ import { EncFile } from './types';
 
 import axios from 'axios';
 
+const UploadArea = ({
+  handleFileChange,
+  handleUpload,
+  setSuccess,
+  setError,
+  loading,
+  success,
+  error,
+}: {
+  handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  handleUpload: () => void;
+  setSuccess: (success: boolean) => void;
+  setError: (error: string | null) => void;
+  loading: boolean;
+  success: boolean;
+  error: string | null;
+}) => {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        maxHeight: '50px',
+        overflow: 'hidden',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        mx: 1,
+      }}
+    >
+      <Typography variant="h4" component="h4" my={1} mr={2}>
+        Files
+      </Typography>
+
+      <Box
+        component="form"
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          flexGrow: 1,
+          alignItems: 'center',
+          gap: 1,
+        }}
+        noValidate
+        autoComplete="off"
+      >
+        <Input
+          type="file"
+          onChange={handleFileChange}
+          inputProps={{ multiple: true }}
+          sx={{
+            m: 0,
+            p: 0,
+          }}
+        />
+
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleUpload}
+          disabled={loading}
+          size="small"
+          sx={{ overflow: 'hidden', maxHeight: '30px' }}
+        >
+          {loading ? <CircularProgress size={24} /> : 'Upload Files'}
+        </Button>
+      </Box>
+
+      <Snackbar
+        open={success}
+        autoHideDuration={6000}
+        onClose={() => setSuccess(false)}
+      >
+        <Alert onClose={() => setSuccess(false)} severity="success">
+          Files uploaded successfully!
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={Boolean(error)}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+      >
+        <Alert onClose={() => setError(null)} severity="error">
+          {error}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+};
+
 const FileUpload = ({
   cccId,
   secret,
@@ -26,9 +115,9 @@ const FileUpload = ({
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploadedURLs, setUploadedURLs] = useState<EncFile[]>([]);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploadedURLs, setUploadedURLs] = useState<EncFile[]>([]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -81,89 +170,21 @@ const FileUpload = ({
       maxWidth="xl"
       sx={{
         display: 'flex',
-        flexDirection: 'row',
+        flexDirection: 'column',
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', maxWidth: '200px' }}>
-        <Typography variant="h4" component="h4" my={1}>
-          Upload
-        </Typography>
+      <UploadArea
+        {...{
+          handleFileChange,
+          handleUpload,
+          setSuccess,
+          setError,
+          loading,
+          success,
+          error,
+        }}
+      />
 
-        <Box
-          component="form"
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-
-            height: '250px',
-          }}
-          noValidate
-          autoComplete="off"
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1,
-            }}
-          >
-            <Input
-              type="file"
-              onChange={handleFileChange}
-              inputProps={{ multiple: true }}
-              sx={{
-                m: 0,
-                p: 0,
-              }}
-            />
-
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleUpload}
-              disabled={loading}
-            >
-              {loading ? <CircularProgress size={24} /> : 'Upload'}
-            </Button>
-          </Box>
-        </Box>
-        <Box>
-          <Typography variant="h5" sx={{}}>
-            Uploaded URLs
-          </Typography>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1,
-            }}
-          >
-            {uploadedURLs.map((url, index) => (
-              <a key={index} href={url.url} target="_blank" rel="noreferrer">
-                {url.url.replace(RegExp('^.*/files'), '')}
-              </a>
-            ))}
-          </Box>
-        </Box>
-        <Snackbar
-          open={success}
-          autoHideDuration={6000}
-          onClose={() => setSuccess(false)}
-        >
-          <Alert onClose={() => setSuccess(false)} severity="success">
-            Files uploaded successfully!
-          </Alert>
-        </Snackbar>
-        <Snackbar
-          open={Boolean(error)}
-          autoHideDuration={6000}
-          onClose={() => setError(null)}
-        >
-          <Alert onClose={() => setError(null)} severity="error">
-            {error}
-          </Alert>
-        </Snackbar>
-      </Box>
       {cccId !== null && secret !== null ? (
         <UserFiles cccId={cccId} upUrls={uploadedURLs} secret={secret} />
       ) : (
