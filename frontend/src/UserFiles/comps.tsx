@@ -143,6 +143,8 @@ export const ItemCard = ({
       backgroundColor: 'rgba(0, 0, 0, 0.1)',
       borderRadius: '8px',
       cursor: 'pointer',
+      height: '100%',
+      flexGrow: 1,
     }}
     onClick={onClick}
   >
@@ -226,7 +228,7 @@ export const DirFile = ({
     return (
       <ItemCard name={name} onClick={onClick}>
         {dfLink}
-        <FolderIcon sx={{ maxHeight: 100, maxWidth: 100 }} />
+        <FolderIcon sx={{ flexGrow: 1, maxWidth: 100 }} />
       </ItemCard>
     );
   }

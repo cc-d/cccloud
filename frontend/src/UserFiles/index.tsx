@@ -127,8 +127,10 @@ const UserFiles = ({
         <Box
           sx={{
             display: 'flex',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
             flexDirection: 'row',
             flexWrap: 'wrap',
+            //alignItems: 'flex-start',
             gap: 1,
           }}
         >

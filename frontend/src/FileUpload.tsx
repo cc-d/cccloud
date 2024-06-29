@@ -65,7 +65,7 @@ const UploadArea = ({
         <Input
           type="file"
           onChange={handleFileChange}
-          inputProps={{ multiple: true }}
+          inputProps={{ multiple: true, webkitdirectory: 'true' }}
           sx={{
             m: 0,
             p: 0,
