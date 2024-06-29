@@ -71,7 +71,7 @@ const UserFiles = ({
   }
 
   return (
-    <Box sx={{ mt: -4 }}>
+    <Box sx={{ mt: -4, width: '100%' }}>
       <Divider
         sx={{
           width: '2px',
@@ -80,11 +80,7 @@ const UserFiles = ({
           m: 1,
         }}
       />
-      <Box
-        sx={{
-          ml: 1,
-        }}
-      >
+      <Box sx={{}}>
         <Box
           sx={{
             display: 'flex',
@@ -128,7 +124,7 @@ const UserFiles = ({
           sx={{
             display: 'flex',
             gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-            flexDirection: 'row',
+            flexDirection: 'column',
             flexWrap: 'wrap',
             //alignItems: 'flex-start',
             gap: 1,
