@@ -125,8 +125,12 @@ const UserFiles = ({
             display: 'flex',
             gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
             flexDirection: 'column',
+            width: '100%',
             flexWrap: 'wrap',
+            maxHeight: '100vh',
+            alignContent: 'flex-start',
             //alignItems: 'flex-start',
+
             gap: 1,
           }}
         >
