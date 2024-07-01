@@ -22,19 +22,6 @@ import { shortUrl } from './utils';
 import { useNavigate } from 'react-router-dom';
 import { red } from '@mui/material/colors';
 
-const dfLinkSx = {
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  maxWidth: '100%',
-  maxHeight: '100%',
-  display: 'block',
-  color: 'inherit',
-  m: 0.5,
-
-  cursor: 'pointer',
-};
-
 interface UrlMediaCardProps {
   url: string;
 }
@@ -68,7 +55,6 @@ const UrlCardMedia = ({ url }: UrlMediaCardProps) => {
           alignItems: 'center',
           width: '100%',
           cursor: 'pointer',
-          height: '100%',
         }}
         onClick={onClick}
       >
@@ -102,9 +88,10 @@ export const MediaFile = ({
     sx: {
       display: 'flex',
       flexGrow: 1,
-      maxWidth: 300,
-      maxHeight: 300,
+
       color: 'primary.main',
+      flexDirection: 'column',
+      gap: 1,
     },
   };
   return lurl.endsWith('.mp4') ? (
@@ -117,7 +104,7 @@ export const MediaFile = ({
     <CardMedia
       sx={{ ...props['sx'], alignItems: 'center', justifyContent: 'center' }}
     >
-      <Link href={`${url}?secret=${secret}`}>
+      <Link href={`${url}?secret=${secret}`} component="a">
         <OtherIcon sx={{ ...props['sx'], height: 150, width: 150 }} />
       </Link>
     </CardMedia>
@@ -125,25 +112,25 @@ export const MediaFile = ({
 };
 
 export const ItemCard = ({
-  name,
+  key,
   onClick,
   children,
 }: {
-  name: string;
+  key: number;
+
   onClick?: () => void;
   children: React.ReactNode;
 }) => (
   <Card
+    key={key}
     sx={{
       display: 'flex',
-      minWidth: '100px',
-      maxWidth: '200px',
       flexDirection: 'column',
       alignItems: 'center',
       backgroundColor: 'rgba(0, 0, 0, 0.1)',
       borderRadius: '8px',
       cursor: 'pointer',
-      height: '100%',
+
       flexGrow: 1,
     }}
     onClick={onClick}
@@ -155,7 +142,6 @@ export const ItemCard = ({
         alignItems: 'center',
         p: 1,
         flexGrow: 1,
-        overflow: 'hidden',
       }}
     >
       {children}
@@ -163,7 +149,7 @@ export const ItemCard = ({
   </Card>
 );
 
-export const DFLink = ({ url }: { url: string }) => {
+export const DFLink = ({ url }: { url: string | undefined }) => {
   return (
     <Link
       href={url}
@@ -171,9 +157,14 @@ export const DFLink = ({ url }: { url: string }) => {
       variant="h6"
       rel="noreferrer"
       component={'a'}
-      sx={dfLinkSx}
+      sx={{
+        color: 'inherit',
+        lineHeight: 1,
+        wordWrap: 'break-all',
+        wordBreak: 'break-all',
+      }}
     >
-      {shortUrl(url)}
+      {shortUrl(url ? url : '')}
     </Link>
   );
 };
@@ -181,6 +172,7 @@ export const DFLink = ({ url }: { url: string }) => {
 export const DirFile = ({
   secret,
   key,
+  width,
   file,
   dir,
   onClick,
@@ -188,47 +180,38 @@ export const DirFile = ({
 }: {
   secret: string;
   key: number;
+  width: number;
   dir?: string;
   file?: EncFile;
   onClick?: () => void;
   fsPath?: string;
 }) => {
-  const name = dir ? dir : file ? shortUrl(file.url) : 'unknown';
   const linkTxt = file ? shortUrl(file.url) : dir;
-
   const dfLink = (
     <Box
       sx={{
-        maxWidth: '200px',
-        maxHeight: '100%',
-        overflow: 'hidden',
+        maxWidth: '100%',
+        wordWrap: 'break-all',
+        textWrap: 'wrap',
+        textAlign: 'center',
       }}
     >
-      <Link
-        href={file ? file.url : fsPath}
-        target="_blank"
-        variant="h6"
-        rel="noreferrer"
-        component={'a'}
-        sx={{ ...dfLinkSx }}
-      >
-        {linkTxt}
-      </Link>
+      <DFLink url={linkTxt} />
     </Box>
   );
 
   if (file) {
     return (
-      <ItemCard name={name} onClick={onClick}>
+      <ItemCard key={key} onClick={onClick}>
         {dfLink}
         <MediaFile url={file.url} secret={secret} />
       </ItemCard>
     );
   } else {
     return (
-      <ItemCard name={name} onClick={onClick}>
+      <ItemCard onClick={onClick} key={key}>
         {dfLink}
-        <FolderIcon sx={{ flexGrow: 1, maxWidth: 100 }} />
+        <FolderIcon sx={{ height: 100, width: 100 }} />
       </ItemCard>
     );
   }

@@ -1,21 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import {
-  Card,
-  CardMedia,
-  Divider,
-  Typography,
-  Box,
-  Link,
-  CardContent,
-  CardActionArea,
-  Button,
-} from '@mui/material';
-import FolderIcon from '@mui/icons-material/Folder';
+import { Divider, Typography, Box, Button } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { EncFile } from '../types';
-import { getDirectoriesAndFiles, shortUrl } from './utils';
-import { MediaFile, ItemCard, DirFile } from './comps';
+import { getDirectoriesAndFiles } from './utils';
+import { DirFile } from './comps';
 
 const UserFiles = ({
   cccId,
@@ -31,6 +20,9 @@ const UserFiles = ({
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const fsPath = searchParams.get('path') || '';
+  const fileDirWidth = 200;
+  const numCols = Math.floor((window.innerWidth - 36) / fileDirWidth);
+  const [cols, setCols] = useState<Array<Array<string | EncFile>>>([]);
 
   const fetchFiles = async () => {
     if (cccId) {
@@ -54,6 +46,22 @@ const UserFiles = ({
     fsPath
   );
 
+  useEffect(() => {
+    const makeCols = (fileOrDir: Array<string | EncFile>, numCols: number) => {
+      const cols = Array.from(
+        { length: numCols },
+        () => [] as Array<string | EncFile>
+      );
+      fileOrDir.forEach((item, index) => {
+        cols[index % numCols].push(item);
+      });
+      return cols;
+    };
+
+    const allItems = [...directories, ...fileList];
+    setCols(makeCols(allItems, numCols));
+  }, [directories, fileList, numCols]);
+
   const handleDirectoryClick = (dir: string) => {
     const newPath = fsPath ? `${fsPath}/${dir}` : dir;
     navigate(`?path=${newPath}`);
@@ -66,12 +74,16 @@ const UserFiles = ({
     navigate(newPath ? `?path=${newPath}` : '');
   };
 
+  const handleFileClick = (file: EncFile) => {
+    window.location.href = `http://localhost:8000/files/${cccId}/dl/${file.relpath}?secret=${secret}`;
+  };
+
   if (!files.length) {
     return <Box>No files found for UID: {cccId}</Box>;
   }
 
   return (
-    <Box sx={{ mt: -4, width: '100%' }}>
+    <Box sx={{ mt: -4, width: '100%', maxWidth: 'calc(100vw - 36px)' }}>
       <Divider
         sx={{
           width: '2px',
@@ -80,91 +92,83 @@ const UserFiles = ({
           m: 1,
         }}
       />
-      <Box sx={{}}>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-          }}
-        >
-          {fsPath && (
-            <Box
+
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+        }}
+      >
+        {fsPath && (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+            }}
+          >
+            <Typography sx={{ my: 1, maxHeight: 28 }}>{fsPath}</Typography>
+            <Button
+              onClick={handleBackClick}
+              variant="contained"
+              color="primary"
+              size="small"
               sx={{
                 display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 1,
+                maxHeight: 28,
+                fontWeight: 'bold',
               }}
             >
-              <Typography sx={{ my: 1, maxHeight: 28 }}>{fsPath}</Typography>
-              <Button
-                onClick={handleBackClick}
-                variant="contained"
-                color="primary"
-                size="small"
-                sx={{
-                  display: 'flex',
-                  maxHeight: 28,
-
-                  fontWeight: 'bold',
-                }}
-              >
-                &lt;- {fsPath.replace(/[^/]+$/, '')}
-              </Button>
-            </Box>
-          )}
-          <Divider
-            sx={{
-              my: 1,
-            }}
-          />
-        </Box>
-        <Box
+              &lt;- {fsPath.replace(/[^/]+$/, '')}
+            </Button>
+          </Box>
+        )}
+        <Divider
           sx={{
-            display: 'flex',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-            flexDirection: 'column',
-            width: '100%',
-            flexWrap: 'wrap',
-            maxHeight: '100vh',
-            alignContent: 'flex-start',
-            //alignItems: 'flex-start',
-
-            gap: 1,
+            my: 1,
           }}
-        >
-          {directories.map((dir, index) => (
-            <ItemCard
-              key={index}
-              name={dir}
-              onClick={() => handleDirectoryClick(dir)}
-            >
-              <Link
-                href={`?path=${fsPath ? `${fsPath}/${dir}` : dir}`}
-                variant="h6"
-                component={'a'}
-                sx={{
-                  color: 'inherit',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {dir}
-              </Link>
-              <FolderIcon sx={{ height: 80, width: 80 }} />
-            </ItemCard>
-          ))}
-          {fileList.map((file, index) => (
-            <DirFile
-              key={index}
-              file={file}
-              secret={secret}
-              onClick={() => {}}
-            />
-          ))}
-        </Box>
+        />
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: 1,
+        }}
+      >
+        {cols.map((col, colIndex) => (
+          <Box
+            key={colIndex}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+              maxWidth: `${100 / numCols}%`, // Ensure each column takes equal width
+            }}
+          >
+            {col.map((item, index) =>
+              typeof item === 'string' ? (
+                <DirFile
+                  key={index}
+                  width={fileDirWidth}
+                  dir={item}
+                  secret={secret}
+                  onClick={() => handleDirectoryClick(item)}
+                />
+              ) : (
+                <DirFile
+                  key={index}
+                  width={fileDirWidth}
+                  file={item}
+                  secret={secret}
+                  onClick={() => handleFileClick(item)}
+                />
+              )
+            )}
+          </Box>
+        ))}
       </Box>
     </Box>
   );
