@@ -98,7 +98,9 @@ const UserFiles = ({
   };
 
   const handleFileClick = (file: EncFile) => {
-    window.location.href = `http://localhost:8000/files/${cccId}/dl/${file.relpath}?secret=${secret}`;
+    if (!file.relpath.toLowerCase().endsWith('.mp4')) {
+      window.location.href = `http://localhost:8000/files/${cccId}/dl/${file.relpath}?secret=${secret}`;
+    }
   };
 
   if (!files.length) {
