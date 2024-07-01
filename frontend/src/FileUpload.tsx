@@ -34,6 +34,17 @@ const UploadArea = ({
   success: boolean;
   error: string | null;
 }) => {
+  const [upDirs, setUpDirs] = useState<boolean>(false);
+  const [inpProps, setInpProps] = useState<any>({});
+
+  useEffect(() => {
+    if (upDirs) {
+      setInpProps({ webkitdirectory: 'true', multiple: true });
+    } else {
+      setInpProps({ multiple: true });
+    }
+  }, [upDirs]);
+
   return (
     <Box
       sx={{
@@ -65,7 +76,7 @@ const UploadArea = ({
         <Input
           type="file"
           onChange={handleFileChange}
-          inputProps={{ multiple: true, webkitdirectory: 'true' }}
+          inputProps={inpProps}
           sx={{
             m: 0,
             p: 0,
@@ -80,8 +91,30 @@ const UploadArea = ({
           size="small"
           sx={{ overflow: 'hidden', maxHeight: '30px' }}
         >
-          {loading ? <CircularProgress size={24} /> : 'Upload Files'}
+          {loading ? <CircularProgress size={24} /> : 'Upload'}
         </Button>
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 1,
+            alignItems: 'center',
+          }}
+        >
+          <Typography variant="body2" component="h6">
+            Directories
+          </Typography>
+          <Checkbox
+            checked={upDirs}
+            onChange={(e) => setUpDirs(e.target.checked)}
+            color="primary"
+            sx={{
+              m: 0,
+              p: 0,
+            }}
+          />
+        </Box>
       </Box>
 
       <Snackbar

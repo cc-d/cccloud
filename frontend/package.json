@@ -40,6 +40,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/react-dom": "^18.3.0",
     "openapi-typescript": "^2.4.1",
     "typescript": "^4.9.5"

@@ -1,7 +1,7 @@
 // FILE: frontend/src/AppBar.tsx
 import React from 'react';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AppBar as MuiAppBar,
   Toolbar,
@@ -57,6 +57,8 @@ const IdSecInput = ({
           backgroundColor: 'rgba(0,0,0, 0.2)',
           flexGrow: 1,
           borderRadius: 1,
+          m: 0,
+          p: 0,
         }}
       />
 
@@ -79,17 +81,52 @@ const AppBar: React.FC<AppBarProps> = ({
   handleRememberCccIdChange,
   handleRememberSecretChange,
 }) => {
+  const [guts, setGuts] = useState(true);
+  useEffect(() => {
+    if (window.innerWidth < 600) {
+      setGuts(false);
+    } else {
+      setGuts(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 600) {
+        setGuts(true);
+      } else {
+        setGuts(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
     <MuiAppBar
       position="static"
       sx={{ backgroundColor: 'primary.main', p: 0.5 }}
     >
       <Toolbar
+        disableGutters={guts}
         sx={{
           justifyContent: 'space-between',
         }}
       >
-        <Typography variant="h6">cccloud</Typography>
+        <Typography
+          variant="h6"
+          sx={{
+            m: 0,
+            p: 0,
+            mr: 0.5,
+          }}
+        >
+          cccloud
+        </Typography>
 
         <Box
           sx={{
@@ -97,7 +134,7 @@ const AppBar: React.FC<AppBarProps> = ({
             flexDirection: 'row',
             justifyContent: 'space-between',
             flexGrow: 1,
-            maxWidth: '500px',
+            maxWidth: '300px',
             alignItems: 'center',
           }}
         >

@@ -6,7 +6,7 @@ services:
     volumes:
       - ./app:/app
     ports:
-      - "8000:8000"
+      - '8000:8000'
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
@@ -15,8 +15,8 @@ services:
       - ./frontend/src:/frontend/src
       - ./frontend/public:/frontend/public
     ports:
-      - "3000:3000"
-    command: npm start
+      - '3000:3000'
+      - '80:80'
 
 volumes:
   app:

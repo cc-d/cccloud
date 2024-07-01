@@ -68,7 +68,7 @@ const UrlCardMedia = ({ url }: UrlMediaCardProps) => {
             alignItems: 'center',
           }}
         />
-        <Typography variant="h5" color="text.primary">
+        <Typography variant="h6" color="text.primary">
           Click to play
         </Typography>
       </Box>
@@ -112,17 +112,13 @@ export const MediaFile = ({
 };
 
 export const ItemCard = ({
-  key,
   onClick,
   children,
 }: {
-  key: number;
-
   onClick?: () => void;
   children: React.ReactNode;
 }) => (
   <Card
-    key={key}
     sx={{
       display: 'flex',
       flexDirection: 'column',
@@ -130,8 +126,7 @@ export const ItemCard = ({
       backgroundColor: 'rgba(0, 0, 0, 0.1)',
       borderRadius: '8px',
       cursor: 'pointer',
-
-      flexGrow: 1,
+      justifyContent: 'center',
     }}
     onClick={onClick}
   >
@@ -140,6 +135,7 @@ export const ItemCard = ({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+
         p: 1,
         flexGrow: 1,
       }}
@@ -171,7 +167,7 @@ export const DFLink = ({ url }: { url: string | undefined }) => {
 
 export const DirFile = ({
   secret,
-  key,
+
   width,
   file,
   dir,
@@ -179,7 +175,7 @@ export const DirFile = ({
   fsPath,
 }: {
   secret: string;
-  key: number;
+
   width: number;
   dir?: string;
   file?: EncFile;
@@ -202,14 +198,14 @@ export const DirFile = ({
 
   if (file) {
     return (
-      <ItemCard key={key} onClick={onClick}>
+      <ItemCard onClick={onClick}>
         {dfLink}
         <MediaFile url={file.url} secret={secret} />
       </ItemCard>
     );
   } else {
     return (
-      <ItemCard onClick={onClick} key={key}>
+      <ItemCard onClick={onClick}>
         {dfLink}
         <FolderIcon sx={{ height: 100, width: 100 }} />
       </ItemCard>

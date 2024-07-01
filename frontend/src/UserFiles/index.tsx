@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import axios from 'axios';
 import { Divider, Typography, Box, Button } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -21,7 +21,9 @@ const UserFiles = ({
   const searchParams = new URLSearchParams(location.search);
   const fsPath = searchParams.get('path') || '';
   const fileDirWidth = 200;
-  const numCols = Math.floor((window.innerWidth - 36) / fileDirWidth);
+  const [numCols, setNumCols] = useState(
+    Math.floor((window.innerWidth - 36) / fileDirWidth)
+  );
   const [cols, setCols] = useState<Array<Array<string | EncFile>>>([]);
 
   const fetchFiles = async () => {
@@ -41,10 +43,26 @@ const UserFiles = ({
     fetchFiles();
   }, [cccId, upUrls]);
 
-  const { directories, files: fileList } = getDirectoriesAndFiles(
-    files,
-    fsPath
-  );
+  useEffect(() => {
+    const handleResize = () => {
+      const newNumCols = Math.floor((window.innerWidth - 36) / fileDirWidth);
+      setNumCols(newNumCols);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [fileDirWidth]);
+
+  const makeCols = (fileOrDir: Array<string | EncFile>, numCols: number) => {
+    const cols = Array.from(
+      { length: numCols },
+      () => [] as Array<string | EncFile>
+    );
+    fileOrDir.forEach((item, index) => {
+      cols[index % numCols].push(item);
+    });
+    return cols;
+  };
 
   useEffect(() => {
     const makeCols = (fileOrDir: Array<string | EncFile>, numCols: number) => {
@@ -58,9 +76,14 @@ const UserFiles = ({
       return cols;
     };
 
-    const allItems = [...directories, ...fileList];
-    setCols(makeCols(allItems, numCols));
-  }, [directories, fileList, numCols]);
+    const allFiles = getDirectoriesAndFiles(files, fsPath);
+    const curFiles = allFiles.files;
+    const curDirs = allFiles.directories;
+
+    const allItems = [...curDirs, ...curFiles];
+    const newCols = makeCols(allItems, numCols);
+    setCols(newCols);
+  }, [files, numCols, fsPath]);
 
   const handleDirectoryClick = (dir: string) => {
     const newPath = fsPath ? `${fsPath}/${dir}` : dir;
@@ -145,13 +168,12 @@ const UserFiles = ({
               display: 'flex',
               flexDirection: 'column',
               gap: 1,
-              maxWidth: `${100 / numCols}%`, // Ensure each column takes equal width
+              maxWidth: `calc(min(${100 / numCols}%, 96vw))`,
             }}
           >
             {col.map((item, index) =>
               typeof item === 'string' ? (
                 <DirFile
-                  key={index}
                   width={fileDirWidth}
                   dir={item}
                   secret={secret}
@@ -159,7 +181,6 @@ const UserFiles = ({
                 />
               ) : (
                 <DirFile
-                  key={index}
                   width={fileDirWidth}
                   file={item}
                   secret={secret}
