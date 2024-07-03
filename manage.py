@@ -111,7 +111,9 @@ def main(*args, **kwargs):
     users = Users(op.join(op.abspath(op.dirname(__file__)), 'users.json'))
 
     if nspace.cmd == 'user':
-        if nspace.action.startswith('a'):
+        if nspace.action is None:
+            parser.print_help()
+        elif nspace.action.startswith('a'):
             users.add()
         elif nspace.action.startswith('l'):
             users.list(nspace.secret)
