@@ -109,3 +109,12 @@ async def view_file(
     return StreamingResponse(
         ut.stream_file(file_path, secret), media_type=mtype
     )
+
+
+@app.get(
+    '/sha256', response_model=sch.Sha256Resp, status_code=status.HTTP_200_OK
+)
+async def sha256sum(
+    data: str = Query(..., title='Data to hash', description='Data to hash')
+):
+    return {'hash': sha256(data.encode()).hexdigest()}

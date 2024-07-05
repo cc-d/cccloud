@@ -18,3 +18,7 @@ class File(BaseModel):
 
 class ListFiles(BaseModel):
     files: list[File]
+
+
+class Sha256Resp(BaseModel):
+    hash: str
