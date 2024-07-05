@@ -6,38 +6,35 @@ import os
 import base58 as b58
 import json
 import typing as T
+from os import urandom
+from hashlib import sha256, _Hash
 from pyshared import default_repr, truncstr
 from hashlib import sha256
 from uuid import uuid4, UUID
 
 
 class User:
-    uuid: str
-    cccid: str
+    hash: _Hash
+    uid: str
     secret: str
 
     def __init__(
         self,
-        uuid: str,
-        cccid: T.Optional[str] = None,
-        secret: T.Optional[str] = None,
+        secret: str = None,
+        uid: str = None,
+
     ):
-        self._uuid = UUID(uuid)
-        self.uuid = str(self._uuid)
+        if uid is None and secret is None:
+            self.secret = sha256(urandom(8))
+        elif uid is None:
+            self.secret = secret
+            self.hash = sha256(secret.encode() if isinstance(secret, str) else secret)
+            self.uid = self.hash.hexdigest()
 
-        if cccid is None and secret is None:
-            h = sha256(self.uuid.encode()).digest()
-            self.cccid = b58.b58encode(h[0:16]).decode()
-            self.secret = b58.b58encode(h[16:32]).decode()
-        else:
-            self.cccid, self.secret = cccid, secret
+    @property
+    def uid(self):
+        return self.hash.hexdigest()
 
-    def json(self, as_str: bool = False) -> T.Union[str, dict]:
-        if as_str:
-            return json.dumps(
-                {self.uuid: {'cccid': self.cccid, 'secret': self.secret}}
-            )
-        return {self.uuid: {'cccid': self.cccid, 'secret': self.secret}}
 
     def __repr__(self):
         return default_repr(self)
@@ -50,7 +47,8 @@ class Users:
 
     def __init__(self, path: str):
         self.path = path
-        self.users = self._load_file()
+
+    def get_users(_)
 
     def _load_file(self) -> dict:
         with open(self.path, 'r') as f:
@@ -61,14 +59,10 @@ class Users:
             self.users[user.uuid] = user
         else:
             user = User(str(uuid4()))
-            self.users[user.uuid] = {
-                'cccid': user.cccid,
-                'secret': user.secret,
-            }
+            self.users[user.uuid] = {'uid': user.uid, 'secret': user.secret}
         os.mkdir(
-            op.join(op.abspath(op.dirname(__file__)), 'uploads', user.cccid)
+            op.join(op.abspath(op.dirname(__file__)), 'uploads', user.uid)
         )
-        self._save_file()
 
     def list(self, secret: bool = False):
         for uid, uvals in self.users.items():
@@ -77,11 +71,7 @@ class Users:
                 if secret
                 else truncstr(uvals['secret'], start_chars=1)
             )
-            print(f'User: {uid} {uvals["cccid"]} {sec}')
-
-    def _save_file(self):
-        with open(self.path, 'w') as f:
-            json.dump(self.users, f)
+            print(f'User: {uid} {uvals["uid"]} {sec}')
 
     def __repr__(self):
         return default_repr(self)

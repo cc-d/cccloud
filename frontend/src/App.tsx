@@ -8,29 +8,29 @@ import AppBar from './AppBar';
 import { Global } from '@emotion/react';
 
 function App() {
-  const [cccId, setCccId] = useState<string | null>(null);
+  const [uid, setuid] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
-  const [rememberCccId, setRememberCccId] = useState<boolean | null>(null);
+  const [rememberuid, setRememberuid] = useState<boolean | null>(null);
   const [rememberSecret, setRememberSecret] = useState<boolean | null>(null);
 
-  const handleCccIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCccId(event.target.value);
+  const handleuidChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setuid(event.target.value);
   };
 
   const handleSecretChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSecret(event.target.value);
   };
 
-  const handleRememberCccIdChange = () => {
-    if (!cccId) {
+  const handleRememberuidChange = () => {
+    if (!uid) {
       return;
     }
-    if (rememberCccId) {
-      localStorage.removeItem('cccid');
-      setRememberCccId(false);
+    if (rememberuid) {
+      localStorage.removeItem('uid');
+      setRememberuid(false);
     } else {
-      localStorage.setItem('cccid', cccId);
-      setRememberCccId(true);
+      localStorage.setItem('uid', uid);
+      setRememberuid(true);
     }
   };
 
@@ -48,17 +48,17 @@ function App() {
   };
 
   useEffect(() => {
-    if (rememberCccId === null) {
-      const cccId = localStorage.getItem('cccid');
-      setRememberCccId(cccId !== null);
-      cccId !== null && setCccId(cccId);
+    if (rememberuid === null) {
+      const uid = localStorage.getItem('uid');
+      setRememberuid(uid !== null);
+      uid !== null && setuid(uid);
     }
     if (rememberSecret === null) {
       const secret = localStorage.getItem('secret');
       setRememberSecret(secret !== null);
       secret !== null && setSecret(secret);
     }
-  }, [rememberCccId, rememberSecret]);
+  }, [rememberuid, rememberSecret]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -70,16 +70,16 @@ function App() {
         sx={{ backgroundColor: `${theme.palette.background.default}` }}
       >
         <AppBar
-          cccId={cccId}
+          uid={uid}
           secret={secret}
-          rememberCccId={rememberCccId}
+          rememberuid={rememberuid}
           rememberSecret={rememberSecret}
-          handleCccIdChange={handleCccIdChange}
+          handleuidChange={handleuidChange}
           handleSecretChange={handleSecretChange}
-          handleRememberCccIdChange={handleRememberCccIdChange}
+          handleRememberuidChange={handleRememberuidChange}
           handleRememberSecretChange={handleRememberSecretChange}
         />
-        <FileUpload cccId={cccId} secret={secret} />
+        <FileUpload uid={uid} secret={secret} />
       </Container>
     </ThemeProvider>
   );
