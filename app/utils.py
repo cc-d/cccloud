@@ -204,11 +204,10 @@ class HashSecret:
             os.makedirs(dir_path)
         return op.abspath(dir_path)
 
-    @logf(use_print=True)
     def write_enc(
         self, path: str, uf: Opt[UploadFile] = None, data: bytes = None
     ) -> str:
-        path = self._abspath(path)
+
         if data is None and uf is None:
             raise ValueError("No data to write")
         if uf is None:
