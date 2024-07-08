@@ -13,6 +13,8 @@ function App() {
   const [rememberuid, setRememberuid] = useState<boolean | null>(null);
   const [rememberSecret, setRememberSecret] = useState<boolean | null>(null);
 
+  const benchSHA256 = async () => {
+
   const handleuidChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setuid(event.target.value);
   };

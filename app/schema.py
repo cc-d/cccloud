@@ -1,4 +1,7 @@
 from pydantic import BaseModel
+from pyshared import U, Opt, Gen
+import base58 as b58
+from .utils import HashStr
 
 
 class ApiResp(BaseModel):
@@ -20,5 +23,11 @@ class ListFiles(BaseModel):
     files: list[File]
 
 
-class Sha256Resp(BaseModel):
-    hash: str
+class cccBaseSecret(BaseModel):
+    secret: str
+    enc: str
+    fs: str
+
+
+class cccSecret(cccBaseSecret):
+    secret: str

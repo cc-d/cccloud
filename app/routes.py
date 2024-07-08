@@ -50,6 +50,7 @@ async def upload_file(
         file,
         op.join(cfg.UPLOAD_DIR, ut.b58enc(cccid), ut.b58enc(fname)),
         secret,
+        True,
     )
 
     return {
@@ -64,7 +65,9 @@ async def download_file(
     cccid: str, filename: str, secret: str = Depends(get_secret)
 ):
 
-    file_path = op.join(cfg.UPLOAD_DIR, ut.b58enc(cccid), ut.b58enc(filename))
+    file_path = op.join(
+        cfg.UPLOAD_DIR, ut.b58enc(cccid), ut.b58enc(filename), True
+    )
 
     if not op.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
@@ -109,12 +112,3 @@ async def view_file(
     return StreamingResponse(
         ut.stream_file(file_path, secret), media_type=mtype
     )
-
-
-@app.get(
-    '/sha256', response_model=sch.Sha256Resp, status_code=status.HTTP_200_OK
-)
-async def sha256sum(
-    data: str = Query(..., title='Data to hash', description='Data to hash')
-):
-    return {'hash': sha256(data.encode()).hexdigest()}

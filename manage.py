@@ -10,6 +10,7 @@ from os import urandom
 from hashlib import sha256, _Hash
 from pyshared import default_repr, truncstr
 from hashlib import sha256
+from utils import HashSecret
 
 
 def main(*args, **kwargs):
