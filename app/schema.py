@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from pyshared import U, Opt, Gen
 import base58 as b58
-from .utils import HashStr
 
 
 class ApiResp(BaseModel):

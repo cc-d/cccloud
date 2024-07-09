@@ -102,14 +102,6 @@ def stream_file(file_path: str, key: str, http: bool = False) -> Gen:
         raise ValueError(f'Error decrypting file: {str(e)}')
 
 
-def sha_dir(key: str) -> str:
-    name = sha256(key.encode()).digest()[0:10].hex()
-    dir_path = op.join(cfg.UPLOAD_DIR, name)
-    if not op.exists(dir_path):
-        os.makedirs(dir_path)
-    return name
-
-
 def memetype(filename: str) -> str:
     mime_type, _ = guess_type(filename, strict=False)
     if not mime_type:

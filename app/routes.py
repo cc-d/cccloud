@@ -112,3 +112,14 @@ async def view_file(
     return StreamingResponse(
         ut.stream_file(file_path, secret), media_type=mtype
     )
+
+
+@app.get('/secret', response_model=sch.cccBaseSecret)
+async def test_secret(
+    qsecret: Opt[str] = Query(None), hsecret: str = Header('Authorization')
+):
+    secret = qsecret or hsecret
+    secret = ut.HashSecret(secret)
+    return sch.cccBaseSecret(
+        secret=secret.b58, enc=secret.secret, fs=secret.dir
+    )
