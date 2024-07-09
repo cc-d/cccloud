@@ -27,7 +27,3 @@ class cccBaseSecret(BaseModel):
     secret: str
     enc: str
     fs: str
-
-
-class cccSecret(cccBaseSecret):
-    secret: str

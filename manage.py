@@ -30,13 +30,7 @@ def main(*args, **kwargs):
     nspace = parser.parse_args(*args, **kwargs)
 
     if nspace.cmd == 'user':
-        if nspace.action is None:
-            parser.print_help()
-        elif nspace.action.startswith('a'):
-            users.add()
-        elif nspace.action.startswith('l'):
-            users.list(nspace.secret)
-
+        
 
 if __name__ == '__main__':
     main(sys.argv[1:])
