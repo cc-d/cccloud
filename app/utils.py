@@ -126,7 +126,7 @@ def safe_name(s: str) -> str:
     return ''.join([c for c in s if c in op.basename(cfg.SAFE_CHARS)])
 
 
-class HashSecret:
+class Secret:
     TYPES: tuple = ('b58', 'hex', 'bytes')
     _hex: str
     _b58: str
