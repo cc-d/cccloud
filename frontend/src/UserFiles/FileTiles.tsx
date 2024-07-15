@@ -7,11 +7,11 @@ import { getDirectoriesAndFiles } from './utils';
 import { DirFile } from './comps';
 
 const UserFiles = ({
-  cccId,
+  uid,
   upUrls,
   secret,
 }: {
-  cccId: string;
+  uid: string;
   upUrls: EncFile[];
   secret: string;
 }) => {
@@ -34,11 +34,9 @@ const UserFiles = ({
     }
   });
   const fetchFiles = async () => {
-    if (cccId) {
+    if (uid) {
       try {
-        const response = await axios.get(
-          `http://localhost:8000/files/${cccId}`
-        );
+        const response = await axios.get(`http://localhost:8000/files/${uid}`);
         setFiles(response.data);
         setLoading(false);
       } catch (error) {
@@ -49,7 +47,7 @@ const UserFiles = ({
 
   useEffect(() => {
     fetchFiles();
-  }, [cccId, upUrls, loading]);
+  }, [uid, upUrls, loading]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -111,12 +109,12 @@ const UserFiles = ({
 
   const handleFileClick = (file: EncFile) => {
     if (!file.relpath.toLowerCase().endsWith('.mp4')) {
-      window.location.href = `http://localhost:8000/files/${cccId}/dl/${file.relpath}?secret=${secret}`;
+      window.location.href = `http://localhost:8000/files/${uid}/dl/${file.relpath}?secret=${secret}`;
     }
   };
 
   if (!files.length) {
-    return <Box>No files found for UID: {cccId}</Box>;
+    return <Box>No files found for UID: {uid}</Box>;
   }
 
   return (

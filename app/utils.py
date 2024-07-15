@@ -1,6 +1,7 @@
 import re
 import os
 from hashlib import sha256
+import hmac
 import os.path as op
 import logging
 import base58 as b58
@@ -12,6 +13,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from pyshared import U, Opt, Gen
 from functools import lru_cache as lru
 import app.config as cfg
+
 
 logger = logging.getLogger(__name__)
 
@@ -126,92 +128,64 @@ def safe_name(s: str) -> str:
     return ''.join([c for c in s if c in op.basename(cfg.SAFE_CHARS)])
 
 
-class Secret:
-    TYPES: tuple = ('b58', 'hex', 'bytes')
-    _hex: str
-    _b58: str
-    _bytes: bytes
-    _val: U[str, bytes]
-    _sha256: bytes
-    _dir: str
+def gen_token(secret: str) -> str:
+    return sha256(secret.encode()).hexdigest()
 
-    def __init__(self, val: U[str, bytes], stype: f'{TYPES}' = 'b58'):
-        self._val = val
-        if isinstance(val, bytes) or stype == 'bytes':
-            self._bytes = val
-        elif isinstance(val, str):
-            if stype == 'b58':
-                self._bytes = b58.b58decode(val)
-            elif stype == 'hex':
-                self._bytes = bytes.fromhex(val)
 
-    @property
-    def hex(self) -> str:
-        if not hasattr(self, '_hex'):
-            self._hex = self._bytes.hex()
-        return self._hex
+class Token:
+    def __init__(self, secret: Opt[str] = None, token: Opt[str] = None):
+        if not any([secret, token]):
+            raise ValueError('Either secret or token must be provided')
+
+        if secret:
+            self.token = sha256(secret.encode()).hexdigest()
+        elif token:
+            self.token = token
+
+    def verify(self, secret: str) -> bool:
+        return hmac.compare_digest(
+            self.token, sha256(secret.encode()).hexdigest()
+        )
 
     @property
-    def b58(self) -> str:
-        if not hasattr(self, '_b58'):
-            self._b58 = b58.b58encode(self.bytes).decode()
-        return self._b58
+    @lru
+    def enc(self) -> str:
+        return self.token[:16]
 
     @property
-    def bytes(self) -> bytes:
-        return self._bytes
-
-    def sha256(self, fmt: str = 'b58') -> str:
-        if not hasattr(self, '_sha256'):
-            self._sha256 = sha256(self.bytes).digest()
-
-        if fmt == 'b58':
-            return b58.b58encode(self._sha256).decode()
-        elif fmt == 'hex':
-            return self._sha256.hex()
-
-        return self._sha256
-
-    @property
-    def dir(self) -> str:
-        if not hasattr(self, '_dir'):
-            self._dir = b58enc(self.sha256(fmt='bytes')[16:32])
-        return self._dir
-
-    @property
-    def secret(self) -> str:
-        if not hasattr(self, '_secret'):
-            self._secret = b58enc(self.sha256(fmt='bytes')[0:16])
-        return self._secret
+    @lru
+    def fs(self) -> str:
+        return self.token[16:32]
 
     def __str__(self) -> str:
-        return self.b58
+        return self.token
 
-    def __bytes__(self) -> bytes:
-        return self.bytes
+    __repr__ = __str__
 
-    def create_dir(self, path: str) -> str:
-        dir_path = op.join(self.dir, path)
-        if not op.exists(dir_path):
-            os.makedirs(dir_path)
-        return op.abspath(dir_path)
 
-    def write_enc(
-        self, path: str, uf: Opt[UploadFile] = None, data: bytes = None
-    ) -> str:
+class Secret:
+    def __init__(self, secret: str):
+        self.secret = secret
 
-        if data is None and uf is None:
-            raise ValueError("No data to write")
-        if uf is None:
-            return enc_data(data, path, self.secret)
-        return enc_file(uf, path, self.secret)
+    @property
+    @lru
+    def token(self) -> Token:
+        return Token(secret=self.secret)
 
-    def read_enc(self, path: str) -> bytes:
-        file_path = op.join(path, self.dir)
-        return stream_file(file_path, self.secret)
+    def verify(self, token: str) -> bool:
+        return self.token.verify(token=token)
 
-    def list_files(self, path: str) -> list[str]:
-        dir_path = op.join(path, self.dir)
-        if not op.exists(dir_path):
-            return []
-        return [self.b58dec(f) for f in os.listdir(dir_path)]
+    @property
+    @lru
+    def enc(self) -> str:
+        return self.token.enc
+
+    @property
+    @lru
+    def fs(self) -> str:
+        return self.token.fs
+
+    def __str__(self) -> str:
+        return self.secret
+
+    __repr__ = __str__

@@ -7,13 +7,11 @@ import { theme, globalStyles } from './theme';
 import AppBar from './AppBar';
 import { Global } from '@emotion/react';
 
-function App() {
+export const App = () => {
   const [uid, setuid] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
   const [rememberuid, setRememberuid] = useState<boolean | null>(null);
   const [rememberSecret, setRememberSecret] = useState<boolean | null>(null);
-
-  const benchSHA256 = async () => {
 
   const handleuidChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setuid(event.target.value);
@@ -85,6 +83,4 @@ function App() {
       </Container>
     </ThemeProvider>
   );
-}
-
-export default App;
+};

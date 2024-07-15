@@ -26,3 +26,7 @@ class cccBaseSecret(BaseModel):
     secret: str
     enc: str
     fs: str
+
+
+class BaseToken(BaseModel):
+    token: str

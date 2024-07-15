@@ -12,13 +12,13 @@ import {
 } from '@mui/material';
 
 interface AppBarProps {
-  cccId: string | null;
+  uid: string | null;
   secret: string | null;
-  rememberCccId: boolean | null;
+  rememberuid: boolean | null;
   rememberSecret: boolean | null;
-  handleCccIdChange: React.ChangeEventHandler<HTMLInputElement>;
+  handleuidChange: React.ChangeEventHandler<HTMLInputElement>;
   handleSecretChange: React.ChangeEventHandler<HTMLInputElement>;
-  handleRememberCccIdChange: React.ChangeEventHandler<HTMLInputElement>;
+  handleRememberuidChange: React.ChangeEventHandler<HTMLInputElement>;
   handleRememberSecretChange: React.ChangeEventHandler<HTMLInputElement>;
 }
 
@@ -30,13 +30,13 @@ const IdSecInput = ({
   handleRememberChange,
 }: {
   value: string | null;
-  type: 'cccid' | 'secret';
+  type: 'uid' | 'secret';
   remember: boolean | null;
   onChange: React.ChangeEventHandler<HTMLInputElement>;
   handleRememberChange: React.ChangeEventHandler<HTMLInputElement>;
 }) => {
-  const label = type === 'cccid' ? 'ID' : 'Secret';
-  const inputType = type === 'cccid' ? 'text' : 'password';
+  const label = type === 'uid' ? 'ID' : 'Secret';
+  const inputType = type === 'uid' ? 'text' : 'password';
 
   return (
     <Box
@@ -72,13 +72,13 @@ const IdSecInput = ({
 };
 
 const AppBar: React.FC<AppBarProps> = ({
-  cccId,
+  uid,
   secret,
-  rememberCccId,
+  rememberuid,
   rememberSecret,
-  handleCccIdChange,
+  handleuidChange,
   handleSecretChange,
-  handleRememberCccIdChange,
+  handleRememberuidChange,
   handleRememberSecretChange,
 }) => {
   const [guts, setGuts] = useState(true);
@@ -139,11 +139,11 @@ const AppBar: React.FC<AppBarProps> = ({
           }}
         >
           <IdSecInput
-            value={cccId}
-            type="cccid"
-            remember={rememberCccId}
-            onChange={handleCccIdChange}
-            handleRememberChange={handleRememberCccIdChange}
+            value={uid}
+            type="uid"
+            remember={rememberuid}
+            onChange={handleuidChange}
+            handleRememberChange={handleRememberuidChange}
           />
           <IdSecInput
             value={secret}

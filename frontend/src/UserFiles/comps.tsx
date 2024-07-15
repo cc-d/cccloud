@@ -167,7 +167,6 @@ export const DFLink = ({ url }: { url: string | undefined }) => {
 
 export const DirFile = ({
   secret,
-
   width,
   file,
   dir,

@@ -13,8 +13,9 @@ from fastapi import (
     status,
     Header,
     Depends,
+    Body,
 )
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import StreamingResponse, Response, PlainTextResponse
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from .appinit import app
@@ -37,36 +38,36 @@ def index():
 
 
 @app.put(
-    "/files/{cccid}",
+    "/files/{uid}",
     status_code=status.HTTP_201_CREATED,
     response_model=sch.File,
 )
 async def upload_file(
-    cccid: str, file: UploadFile = File(...), secret: str = Depends(get_secret)
+    uid: str, file: UploadFile = File(...), secret: str = Depends(get_secret)
 ):
 
     fname = file.filename
     enc = ut.enc_file(
         file,
-        op.join(cfg.UPLOAD_DIR, ut.b58enc(cccid), ut.b58enc(fname)),
+        op.join(cfg.UPLOAD_DIR, ut.b58enc(uid), ut.b58enc(fname)),
         secret,
         True,
     )
 
     return {
         'relpath': fname,
-        'url': f'{cfg.BASE_URL}/files/{cccid}/view/{fname}',
+        'url': f'{cfg.BASE_URL}/files/{uid}/view/{fname}',
         'fs': ut.b58enc(fname),
     }
 
 
-@app.get("/files/{cccid}/dl/{filename}", response_class=StreamingResponse)
+@app.get("/files/{uid}/dl/{filename}", response_class=StreamingResponse)
 async def download_file(
-    cccid: str, filename: str, secret: str = Depends(get_secret)
+    uid: str, filename: str, secret: str = Depends(get_secret)
 ):
 
     file_path = op.join(
-        cfg.UPLOAD_DIR, ut.b58enc(cccid), ut.b58enc(filename), True
+        cfg.UPLOAD_DIR, ut.b58enc(uid), ut.b58enc(filename), True
     )
 
     if not op.exists(file_path):
@@ -82,30 +83,30 @@ async def download_file(
     )
 
 
-@app.get("/files/{cccid}", response_model=list[sch.File])
-async def list_files(cccid: str):
-    enccccid = ut.b58enc(cccid)
+@app.get("/files/{uid}", response_model=list[sch.File])
+async def list_files(uid: str):
+    encuid = ut.b58enc(uid)
 
-    if not op.exists(op.join(cfg.UPLOAD_DIR, enccccid)):
+    if not op.exists(op.join(cfg.UPLOAD_DIR, encuid)):
         return []
 
     return [
         sch.File(
-            url=f"{cfg.BASE_URL}/files/{cccid}/view/{ut.b58dec(f)}",
+            url=f"{cfg.BASE_URL}/files/{uid}/view/{ut.b58dec(f)}",
             fs=f,
             relpath=ut.b58dec(f),
         )
-        for f in os.listdir(op.join(cfg.UPLOAD_DIR, enccccid))
+        for f in os.listdir(op.join(cfg.UPLOAD_DIR, encuid))
     ]
 
 
-@app.get("/files/{cccid}/view/{filename}", response_class=StreamingResponse)
+@app.get("/files/{uid}/view/{filename}", response_class=StreamingResponse)
 async def view_file(
-    cccid: str, filename: str, secret: str = Depends(get_secret)
+    uid: str, filename: str, secret: str = Depends(get_secret)
 ):
     mtype = ut.memetype(filename)
 
-    file_path = op.join(cfg.UPLOAD_DIR, ut.b58enc(cccid), ut.b58enc(filename))
+    file_path = op.join(cfg.UPLOAD_DIR, ut.b58enc(uid), ut.b58enc(filename))
     if not op.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
@@ -114,12 +115,33 @@ async def view_file(
     )
 
 
-@app.get('/secret', response_model=sch.cccBaseSecret)
-async def test_secret(
-    qsecret: Opt[str] = Query(None), hsecret: str = Header('Authorization')
+@app.post('/token', response_class=PlainTextResponse)
+async def token(
+    bsecret: U[str, None] = Body(None), qsecret: U[str, None] = Query(None)
 ):
-    secret = qsecret or hsecret
-    secret = ut.HashSecret(secret)
-    return sch.cccBaseSecret(
-        secret=secret.b58, enc=secret.secret, fs=secret.dir
+    if not any([bsecret, qsecret]):
+        raise HTTPException(
+            status_code=400,
+            detail='Either body or query param secret must be provided',
+        )
+
+    secret = ut.Token(
+        bsecret
+        if bsecret is not None
+        else qsecret if qsecret is not None else None
     )
+
+    if secret is None:
+        raise HTTPException(
+            status_code=400,
+            detail='Either body or query param secret must be provided',
+        )
+
+    return secret.token
+
+
+@app.post('/token/verify/{token}', response_class=PlainTextResponse)
+async def verify_token(token: str, secret: str = Body(...)):
+    if ut.Token(token=token).verify(secret):
+        return 'ok'
+    raise HTTPException(status_code=401, detail='Unauthorized')
