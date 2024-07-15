@@ -7,11 +7,11 @@ import { getDirectoriesAndFiles } from './utils';
 import { DirFile } from './comps';
 
 const UserFiles = ({
-  uid,
+  token,
   upUrls,
   secret,
 }: {
-  uid: string;
+  token: string;
   upUrls: EncFile[];
   secret: string;
 }) => {
@@ -27,9 +27,15 @@ const UserFiles = ({
   const [cols, setCols] = useState<Array<Array<string | EncFile>>>([]);
 
   const fetchFiles = async () => {
-    if (uid) {
+    if (token) {
       try {
-        const response = await axios.get(`http://localhost:8000/files/${uid}`);
+        const response = await axios.get(`http://localhost:8000/files/`, {
+          headers: {
+            Authorization: `${token}`,
+            Secret: secret,
+          },
+        });
+
         setFiles(response.data);
       } catch (error) {
         console.error(error);
@@ -39,7 +45,7 @@ const UserFiles = ({
 
   useEffect(() => {
     fetchFiles();
-  }, [uid, upUrls]);
+  }, [token]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -97,12 +103,12 @@ const UserFiles = ({
 
   const handleFileClick = (file: EncFile) => {
     if (!file.relpath.toLowerCase().endsWith('.mp4')) {
-      window.location.href = `http://localhost:8000/files/${uid}/dl/${file.relpath}?secret=${secret}`;
+      window.location.href = `http://localhost:8000/files/${token}/dl/${file.relpath}?token=${token}&secret=${secret}`;
     }
   };
 
   if (!files.length) {
-    return <Box>No files found for UID: {uid}</Box>;
+    return <Box>No files found for token: {token}</Box>;
   }
 
   return (

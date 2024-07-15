@@ -38,27 +38,27 @@ def index():
 
 
 @app.put(
-    "/files/{uid}",
+    "/files",
     status_code=status.HTTP_201_CREATED,
-    response_model=sch.File,
+    response_model=list[sch.File],
 )
-async def upload_file(
-    uid: str, file: UploadFile = File(...), secret: str = Depends(get_secret)
+async def upload_files(
+    file: UploadFile = File(...), secret: str = Depends(get_secret)
 ):
 
-    fname = file.filename
-    enc = ut.enc_file(
-        file,
-        op.join(cfg.UPLOAD_DIR, ut.b58enc(uid), ut.b58enc(fname)),
-        secret,
-        True,
-    )
+    files = []
+    if not op.exists(op.join(cfg.UPLOAD_DIR, secret.fs)):
+        os.makedirs(op.join(cfg.UPLOAD_DIR, secret.fs), exist_ok=True)
 
-    return {
-        'relpath': fname,
-        'url': f'{cfg.BASE_URL}/files/{uid}/view/{fname}',
-        'fs': ut.b58enc(fname),
-    }
+    for f in os.listdir(op.join(cfg.UPLOAD_DIR, secret.fs)):
+        files.append(
+            {
+                'relpath': f,
+                'url': f'{cfg.BASE_URL}/files/{secret.fs}/view/{f}',
+                'fs': f.filename.encode().hex(),
+            }
+        )
+    return [f.filename for f in files]
 
 
 @app.get("/files/{uid}/dl/{filename}", response_class=StreamingResponse)
@@ -83,20 +83,30 @@ async def download_file(
     )
 
 
-@app.get("/files/{uid}", response_model=list[sch.File])
-async def list_files(uid: str):
-    encuid = ut.b58enc(uid)
+@app.get("/files", response_model=list[sch.File])
+async def list_files(secret: str = Depends(get_secret)):
+    if not op.exists(op.join(cfg.UPLOAD_DIR, secret.fs)):
+        os.makedirs(op.join(cfg.UPLOAD_DIR, secret.fs), exist_ok=True)
 
-    if not op.exists(op.join(cfg.UPLOAD_DIR, encuid)):
-        return []
-
-    return [
-        sch.File(
-            url=f"{cfg.BASE_URL}/files/{uid}/view/{ut.b58dec(f)}",
-            fs=f,
-            relpath=ut.b58dec(f),
+    if secret is None:
+        raise HTTPException(
+            status_code=400,
+            detail='Either body or query param secret must be provided',
         )
-        for f in os.listdir(op.join(cfg.UPLOAD_DIR, encuid))
+
+    if secret is None:
+        raise HTTPException(
+            status_code=400,
+            detail='Either body or query param secret must be provided',
+        )
+    files = []
+    return [
+        {
+            'relpath': f,
+            'url': f'{cfg.BASE_URL}/files/{secret.fs}/view/{f}',
+            'fs': ut.b58enc(f),
+        }
+        for f in os.listdir(op.join(cfg.UPLOAD_DIR, secret.fs))
     ]
 
 
@@ -115,29 +125,26 @@ async def view_file(
     )
 
 
+@app.get('/token', response_class=PlainTextResponse)
+async def token(secret: str = Depends(get_secret)):
+    return ut.Token(secret).token
+
+
 @app.post('/token', response_class=PlainTextResponse)
-async def token(
-    bsecret: U[str, None] = Body(None), qsecret: U[str, None] = Query(None)
+async def upload_file(
+    file: UploadFile = File(...), secret: str = Depends(get_secret)
 ):
-    if not any([bsecret, qsecret]):
+    if not secret:
         raise HTTPException(
             status_code=400,
             detail='Either body or query param secret must be provided',
         )
 
-    secret = ut.Token(
-        bsecret
-        if bsecret is not None
-        else qsecret if qsecret is not None else None
-    )
+    file_path = op.join(cfg.UPLOAD_DIR, secret.fs, file.filename)
+    with open(file_path, 'wb') as f:
+        f.write(file.file.read())
 
-    if secret is None:
-        raise HTTPException(
-            status_code=400,
-            detail='Either body or query param secret must be provided',
-        )
-
-    return secret.token
+    return ut.Token(secret).token
 
 
 @app.post('/token/verify/{token}', response_class=PlainTextResponse)

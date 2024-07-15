@@ -133,42 +133,64 @@ def gen_token(secret: str) -> str:
 
 
 class Token:
+    token: str
+
     def __init__(self, secret: Opt[str] = None, token: Opt[str] = None):
         if not any([secret, token]):
             raise ValueError('Either secret or token must be provided')
-
         if secret:
-            self.token = sha256(secret.encode()).hexdigest()
+            self.token = (
+                sha256(secret.encode()) if isinstance(secret, str) else secret
+            )
+            self.token_hex = self.token.hexdigest()
+
         elif token:
             self.token = token
+            self.token_hex = token
 
-    def verify(self, secret: str) -> bool:
-        return hmac.compare_digest(
-            self.token, sha256(secret.encode()).hexdigest()
-        )
+    def verify(self, token: Opt[str] = None, secret: Opt[str] = None) -> bool:
+        if not any([token, secret]):
+            raise ValueError('Either token or secret must be provided')
+        if secret:
+            expected_token = sha256(secret.encode()).hexdigest()
+            return hmac.compare_digest(
+                expected_token.encode(), self.token.encode()
+            )
+        return hmac.compare_digest(self.token.encode(), token.encode())
 
     @property
-    @lru
     def enc(self) -> str:
-        return self.token[:16]
+        return self.token_hex[0:16]
 
     @property
-    @lru
+    def fs_fmt(self, fmt: str = 'bytes') -> str:
+        if fmt == 'bytes':
+            return self.token_hex.encode()
+        elif fmt == 'hex':
+            return self.token_hex
+        return self.token_hex.encode()
+
+    @property
     def fs(self) -> str:
-        return self.token[16:32]
+        if not op.exists(op.join(cfg.UPLOAD_DIR, self.enc)):
+            os.makedirs(op.join(cfg.UPLOAD_DIR, self.enc))
+        return self.enc
 
-    def __str__(self) -> str:
-        return self.token
-
-    __repr__ = __str__
+    def write_file(self, file: UploadFile) -> str:
+        return enc_file(
+            file,
+            op.join(cfg.UPLOAD_DIR, self.fs, file.filename),
+            self.token_hex,
+        )
 
 
 class Secret:
+    secret: str
+
     def __init__(self, secret: str):
         self.secret = secret
 
     @property
-    @lru
     def token(self) -> Token:
         return Token(secret=self.secret)
 
@@ -176,16 +198,22 @@ class Secret:
         return self.token.verify(token=token)
 
     @property
-    @lru
     def enc(self) -> str:
         return self.token.enc
 
     @property
-    @lru
     def fs(self) -> str:
         return self.token.fs
 
-    def __str__(self) -> str:
-        return self.secret
+    @property
+    def fspath(self) -> str:
+        return op.join(cfg.UPLOAD_DIR, self.fs)
 
-    __repr__ = __str__
+
+class EFile:
+    def __init__(self, file: UploadFile, secret: str):
+        self.file = file
+        self.secret = secret
+
+    def enc(self) -> str:
+        return enc_file(self.file, self.secret)

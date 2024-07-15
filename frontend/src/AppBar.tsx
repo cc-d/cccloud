@@ -12,13 +12,9 @@ import {
 } from '@mui/material';
 
 interface AppBarProps {
-  uid: string | null;
   secret: string | null;
-  rememberuid: boolean | null;
   rememberSecret: boolean | null;
-  handleuidChange: React.ChangeEventHandler<HTMLInputElement>;
   handleSecretChange: React.ChangeEventHandler<HTMLInputElement>;
-  handleRememberuidChange: React.ChangeEventHandler<HTMLInputElement>;
   handleRememberSecretChange: React.ChangeEventHandler<HTMLInputElement>;
 }
 
@@ -30,14 +26,13 @@ const IdSecInput = ({
   handleRememberChange,
 }: {
   value: string | null;
-  type: 'uid' | 'secret';
+  type: 'secret';
   remember: boolean | null;
   onChange: React.ChangeEventHandler<HTMLInputElement>;
   handleRememberChange: React.ChangeEventHandler<HTMLInputElement>;
 }) => {
-  const label = type === 'uid' ? 'ID' : 'Secret';
-  const inputType = type === 'uid' ? 'text' : 'password';
-
+  const label = 'secret';
+  const inputType = 'password';
   return (
     <Box
       sx={{
@@ -72,13 +67,12 @@ const IdSecInput = ({
 };
 
 const AppBar: React.FC<AppBarProps> = ({
-  uid,
   secret,
-  rememberuid,
+
   rememberSecret,
-  handleuidChange,
+
   handleSecretChange,
-  handleRememberuidChange,
+
   handleRememberSecretChange,
 }) => {
   const [guts, setGuts] = useState(true);
@@ -138,13 +132,6 @@ const AppBar: React.FC<AppBarProps> = ({
             alignItems: 'center',
           }}
         >
-          <IdSecInput
-            value={uid}
-            type="uid"
-            remember={rememberuid}
-            onChange={handleuidChange}
-            handleRememberChange={handleRememberuidChange}
-          />
           <IdSecInput
             value={secret}
             type="secret"

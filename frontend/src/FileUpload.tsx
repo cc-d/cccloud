@@ -140,11 +140,11 @@ const UploadArea = ({
 };
 
 const FileUpload = ({
-  uid,
   secret,
+  token,
 }: {
-  uid: string | null;
   secret: string | null;
+  token: string | null;
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -159,11 +159,6 @@ const FileUpload = ({
   };
 
   const handleUpload = async () => {
-    if (!files.length || !uid) {
-      setError('Please provide both files and a uid.');
-      return;
-    }
-
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -175,12 +170,12 @@ const FileUpload = ({
         formData.append('file', file);
 
         const response = await axios.put(
-          `http://localhost:8000/files/${uid}`,
+          `http://localhost:8000/files/`,
           formData,
           {
             headers: {
               'Content-Type': 'multipart/form-data',
-              Authorization: uid,
+              Authorization: `${token}`,
             },
           }
         );
@@ -218,8 +213,8 @@ const FileUpload = ({
         }}
       />
 
-      {uid !== null && secret !== null ? (
-        <UserFiles uid={uid} upUrls={uploadedURLs} secret={secret} />
+      {token ? (
+        <UserFiles upUrls={uploadedURLs} token={token} secret={secret || ''} />
       ) : (
         <Typography sx={{ m: 5 }} variant="h5">
           ... enter User ID to view files ...

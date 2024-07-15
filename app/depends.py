@@ -1,10 +1,14 @@
-from fastapi import Depends, Header, Request, HTTPException
-from .utils import Secret
+from fastapi import Depends, Request, HTTPException
+from .utils import Secret, Token
 
 
 def get_secret(request: Request) -> Secret:
-    if not request.query_params.get('secret'):
-        if not request.headers.get('Authorization'):
-            raise HTTPException(status_code=401, detail='Unauthorized')
-        return request.headers.get('Authorization')
-    return request.query_params.get('secret')
+    token = request.query_params.get('token')
+    secret = request.headers.get('X-Secret') or request.headers.get('Secret')
+    if request.headers.get('Authorization'):
+        secret = request.headers['Authorization']
+    if token:
+        return Secret(token)
+    if secret:
+        return Secret(secret)
+    raise HTTPException(status_code=400, detail='Secret not provided')
