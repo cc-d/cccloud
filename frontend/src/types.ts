@@ -1,9 +1,6 @@
-
-
-
 export interface EncFile {
-    url: string;
-    fs: string;
-    relpath: string;
+  url: string;
+  fs: string;
+  relpath: string;
+  name: string;
 }
-

@@ -47,18 +47,49 @@ async def upload_files(
 ):
 
     files = []
-    if not op.exists(op.join(cfg.UPLOAD_DIR, secret.fs)):
-        os.makedirs(op.join(cfg.UPLOAD_DIR, secret.fs), exist_ok=True)
+    secret = ut.Secret(secret)
+    sechex = secret.hex
+    if not op.exists(op.join(cfg.UPLOAD_DIR, sechex)):
+        os.makedirs(op.join(cfg.UPLOAD_DIR, sechex), exist_ok=True)
+    f = file.filename.encode().hex()
 
-    for f in os.listdir(op.join(cfg.UPLOAD_DIR, secret.fs)):
+    enc_file = ut.enc_file(
+        file, op.join(cfg.UPLOAD_DIR, secret.fs, f), secret.enc
+    )
+    return [
+        {
+            'relpath': f,
+            'url': f'{cfg.BASE_URL}/files/{secret.fs.encode().hex()}/view/{f.hexdigest() if isinstance(f, bytes) else f}',
+            'fs': ut.b58enc(f),
+            'name': f,
+        }
+    ]
+
+
+@app.get("/files", response_model=list[dict])
+async def list_files(secret: str = Depends(get_secret)):
+    lfdir = op.join(cfg.UPLOAD_DIR, secret.hex)
+    if secret is None:
+        raise HTTPException(
+            status_code=400,
+            detail='Either body or query param secret must be provided',
+        )
+
+    if not op.exists(lfdir):
+        os.makedirs(lfdir, exist_ok=True)
+
+    files = []
+    for f in os.listdir(lfdir):
         files.append(
             {
                 'relpath': f,
-                'url': f'{cfg.BASE_URL}/files/{secret.fs}/view/{f}',
-                'fs': f.filename.encode().hex(),
+                'url': f'{cfg.BASE_URL}/files/{secret.hex}/view/{f.hexdigest() if isinstance(f, bytes) else f}',
+                'fs': op.abspath(op.join(lfdir, f)),
+                'name': bytes.fromhex(f).decode().encode(),
             }
         )
-    return [f.filename for f in files]
+
+    return files
 
 
 @app.get("/files/{uid}/dl/{filename}", response_class=StreamingResponse)
@@ -103,8 +134,9 @@ async def list_files(secret: str = Depends(get_secret)):
     return [
         {
             'relpath': f,
-            'url': f'{cfg.BASE_URL}/files/{secret.fs}/view/{f}',
-            'fs': ut.b58enc(f),
+            'url': f"{cfg.BASE_URL}/files/{secret.fs}/view/{f if not isinstance(f, bytes) else f.hex()}",
+            'fs': f"{secret.fs}/{f}",
+            'name': f,
         }
         for f in os.listdir(op.join(cfg.UPLOAD_DIR, secret.fs))
     ]

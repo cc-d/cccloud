@@ -142,11 +142,11 @@ class Token:
             self.token = (
                 sha256(secret.encode()) if isinstance(secret, str) else secret
             )
-            self.token_hex = self.token.hexdigest()
-
-        elif token:
-            self.token = token
-            self.token_hex = token
+            self.hex = (
+                self.token.hexdigest()
+                if not isinstance(secret, str)
+                else secret.encode().hex()
+            )
 
     def verify(self, token: Opt[str] = None, secret: Opt[str] = None) -> bool:
         if not any([token, secret]):
@@ -160,7 +160,9 @@ class Token:
 
     @property
     def enc(self) -> str:
-        return self.token_hex[0:16]
+        if isinstance(self.token, str):
+            return self.token.encode().hex()
+        return str(self.token)
 
     @property
     def fs_fmt(self, fmt: str = 'bytes') -> str:
@@ -179,8 +181,12 @@ class Token:
     def write_file(self, file: UploadFile) -> str:
         return enc_file(
             file,
-            op.join(cfg.UPLOAD_DIR, self.fs, file.filename),
-            self.token_hex,
+            op.join(
+                cfg.UPLOAD_DIR,
+                self.fs,
+                file.filename.encode().hex(),
+                key=self.token,
+            ),
         )
 
 
@@ -191,8 +197,23 @@ class Secret:
         self.secret = secret
 
     @property
+    def hex(self) -> str:
+        b = (
+            self.secret.encode()
+            if isinstance(self.secret, str)
+            else self.secret
+        )
+        return b.hex() if isinstance(b, bytes) else b.hex
+
+    @property
     def token(self) -> Token:
-        return Token(secret=self.secret)
+        return Token(
+            secret=(
+                self.secret
+                if isinstance(self.secret, str)
+                else self.secret.hex
+            )
+        )
 
     def verify(self, token: str) -> bool:
         return self.token.verify(token=token)
@@ -208,6 +229,12 @@ class Secret:
     @property
     def fspath(self) -> str:
         return op.join(cfg.UPLOAD_DIR, self.fs)
+
+    def __str__(self) -> str:
+        return self.secret.encode().hex()
+
+    def __repr__(self) -> str:
+        return self.secret.encode().hex()
 
 
 class EFile:

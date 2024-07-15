@@ -145,7 +145,7 @@ export const ItemCard = ({
   </Card>
 );
 
-export const DFLink = ({ url }: { url: string | undefined }) => {
+export const DFLink = ({ url, name }: { url: string; name: string }) => {
   return (
     <Link
       href={url}
@@ -160,7 +160,7 @@ export const DFLink = ({ url }: { url: string | undefined }) => {
         wordBreak: 'break-all',
       }}
     >
-      {shortUrl(url ? url : '')}
+      {name === undefined ? url : name}
     </Link>
   );
 };
@@ -181,7 +181,8 @@ export const DirFile = ({
   onClick?: () => void;
   fsPath?: string;
 }) => {
-  const linkTxt = file ? shortUrl(file.url) : dir;
+  const linkTxt = !dir && file ? file.url : `${fsPath}/${dir}`;
+  const fName = !dir && file && file.name ? file.name : dir;
   const dfLink = (
     <Box
       sx={{
@@ -191,7 +192,7 @@ export const DirFile = ({
         textAlign: 'center',
       }}
     >
-      <DFLink url={linkTxt} />
+      <DFLink url={linkTxt} name={fName || ''} />
     </Box>
   );
 
