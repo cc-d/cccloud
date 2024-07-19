@@ -8,21 +8,22 @@ import AppBar from './AppBar';
 import { Global } from '@emotion/react';
 
 export const App = () => {
-  const [secret, setSecret] = useState<string | null>(null);
+  const [secret, setSecret] = useState<string>('');
   const [rememberSecret, setRememberSecret] = useState<boolean | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const getToken = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/token`, {
+      const resp = await fetch(`http://localhost:8000/token`, {
         method: 'POST',
+        body: secret,
         headers: {
-          'Content-Type': 'application/json',
-          Secret: secret || '',
+          'X-Secret': secret,
         },
       });
-      const data = await response.text();
+
+      const data = await resp.text();
 
       setToken(data);
     } catch (error) {

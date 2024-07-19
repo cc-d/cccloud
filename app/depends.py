@@ -8,7 +8,8 @@ def get_secret(request: Request) -> Secret:
     if request.headers.get('Authorization'):
         secret = request.headers['Authorization']
     if token:
-        return Secret(token)
-    if secret:
-        return Secret(secret)
+        return Secret(token=token)
+    elif secret:
+        return Secret(secret=secret)
+
     raise HTTPException(status_code=400, detail='Secret not provided')
