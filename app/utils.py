@@ -217,10 +217,23 @@ class Token:
 
 class Secret:
     secret: str
+    token: Token
 
     def __init__(self, secret: str):
         self.secret = secret
         self.token = Token(secret=secret)
+
+    @classmethod
+    def verify(self, exp_token: str, exp_secret: str) -> bool:
+        return self.token.verify(token=exp_token, secret=exp_secret)
+
+    @property
+    def hex(self) -> str:
+        return self.secret.encode().hex()
+
+    @property
+    def fs(self) -> str:
+        return self.token.fs
 
 
 class EFile:

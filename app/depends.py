@@ -1,15 +1,9 @@
-from fastapi import Depends, Request, HTTPException
+from fastapi import Depends, Request,  HTTPException`
 from .utils import Secret, Token
+from pyshared import Opt, U, Gen
 
-
-def get_secret(request: Request) -> Secret:
-    token = request.query_params.get('token')
-    secret = request.headers.get('X-Secret') or request.headers.get('Secret')
-    if request.headers.get('Authorization'):
-        secret = request.headers['Authorization']
-    if token:
-        return Secret(token=token)
-    elif secret:
-        return Secret(secret=secret)
-
-    raise HTTPException(status_code=400, detail='Secret not provided')
+def get_secret(
+    request: Request
+) -> Secret:
+    r = request
+    secret = r.headers.get('X-Secret') or r.query_params.get('secret') or r.headers.get('Authorization') or r.headers.get('X-Secret')
